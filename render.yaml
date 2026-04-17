@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: kyokushin-seminar
+    runtime: python
+    buildCommand: pip install -r requirements.txt && mkdir -p data && python3 seed.py
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:////opt/render/project/src/data/seminar.db
+      - key: BASE_URL
+        value: https://kyokushin-seminar.onrender.com
+      - key: ADMIN_KEY
+        value: kyokushin-admin-2026
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false

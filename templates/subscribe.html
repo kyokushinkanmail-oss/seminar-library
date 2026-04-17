@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}添削サービス — 極真館組手セミナー{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('library') }}" class="btn-back">← 戻る</a>
+        <span class="header-title">添削サービス</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="text-center mb-6">
+        <span style="font-size:3.5rem; display:block; margin-bottom:14px;">🥋</span>
+        <h1 style="font-size:1.4rem; font-weight:900; margin-bottom:6px;">組手動画 添削サービス</h1>
+        <p class="text-muted" style="font-size:1rem;">先生があなたの組手を直接アドバイス</p>
+    </div>
+
+    <!-- 価格 -->
+    <div class="card card-red text-center mb-6">
+        <div style="font-size:2.8rem; font-weight:900; color:#991b1b;">
+            ¥300<span style="font-size:1rem; color:#b91c1c; font-weight:700;">/月</span>
+        </div>
+        <p style="font-size:0.9rem; font-weight:700; color:#b91c1c;">いつでも解約OK・何度でも相談可能</p>
+    </div>
+
+    <!-- ステップ -->
+    <div class="step-item">
+        <div class="step-number">1</div>
+        <div>
+            <h3>動画を送る</h3>
+            <p>稽古や試合の組手動画を撮影して送信</p>
+        </div>
+    </div>
+    <div class="step-item">
+        <div class="step-number">2</div>
+        <div>
+            <h3>先生が添削</h3>
+            <p>臼井先生・千田先生が改善ポイントをフィードバック</p>
+        </div>
+    </div>
+    <div class="step-item mb-6">
+        <div class="step-number">3</div>
+        <div>
+            <h3>添削が届く</h3>
+            <p>ポイントを示した添削コメントまたは動画が届きます</p>
+        </div>
+    </div>
+
+    <!-- 申し込みボタン -->
+    <a href="https://buy.stripe.com/test_9B6eVd3So2bL1X79tQg7e01" class="btn btn-red btn-block mb-2" id="subscribe-btn">
+        月額300円で始める
+    </a>
+    <p class="text-center text-muted text-sm">Stripeによる安全な決済</p>
+</div>
+{% endblock %}

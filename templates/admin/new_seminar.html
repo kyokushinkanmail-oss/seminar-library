@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}新規セミナー作成 — 管理画面{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('admin_dashboard', key=key) }}" class="btn-back">← 戻る</a>
+        <span class="header-title">新規セミナー作成</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <form method="POST" action="{{ url_for('admin_new_seminar', key=key) }}">
+        <input type="hidden" name="key" value="{{ key }}">
+
+        <div class="form-group">
+            <label class="form-label">セミナータイトル</label>
+            <input type="text" name="title" class="form-input" placeholder="臼井祐介・千田隼人" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">サブタイトル</label>
+            <input type="text" name="subtitle" class="form-input" placeholder="【組手セミナー】ポジショニング論">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">開催日</label>
+            <input type="date" name="date" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">指導者（カンマ区切り）</label>
+            <input type="text" name="instructors" class="form-input" placeholder="臼井祐介, 千田隼人">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">URL スラッグ（任意）</label>
+            <input type="text" name="slug" class="form-input" placeholder="2026-04-20-kumite">
+            <p class="text-muted text-sm mt-2">空欄なら自動生成されます</p>
+        </div>
+
+        <button type="submit" class="btn btn-red btn-block mt-4">セミナーを作成</button>
+    </form>
+</div>
+{% endblock %}

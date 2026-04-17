@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}新規登録{% else %}ログイン{% endif %} — 極真館組手セミナー{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('landing') }}" class="btn-back">← 戻る</a>
+    </div>
+</div>
+
+<div class="container py-4">
+    <h2 style="font-size:1.4rem; font-weight:900; margin-bottom:8px;">
+        {% if is_new %}はじめての方{% else %}2回目以降の方{% endif %}
+    </h2>
+    <p class="text-muted mb-4" style="font-size:0.95rem; line-height:1.7;">
+        {% if is_new %}
+        お名前と電話番号を登録すると、今後参加するセミナーの資料がたまっていきます。
+        {% else %}
+        前回登録した電話番号を入力してください。
+        {% endif %}
+    </p>
+
+    <!-- タブ -->
+    <div class="tab-group">
+        <a href="{{ url_for('register') }}" class="tab-btn {% if is_new %}active{% endif %}">初めて参加</a>
+        <a href="{{ url_for('login') }}" class="tab-btn {% if not is_new %}active{% endif %}">2回目以降</a>
+    </div>
+
+    <!-- フォーム -->
+    <form method="POST" action="{% if is_new %}{{ url_for('register') }}{% else %}{{ url_for('login') }}{% endif %}">
+        {% if is_new %}
+        <div class="form-group">
+            <label class="form-label">お名前</label>
+            <input type="text" name="name" class="form-input" placeholder="山田太郎" required autocomplete="name">
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label">電話番号</label>
+            <input type="tel" name="phone" class="form-input" placeholder="090-1234-5678" required autocomplete="tel">
+        </div>
+
+        <button type="submit" class="btn btn-red btn-block mt-4">
+            {% if is_new %}登録して資料を受け取る{% else %}ログイン{% endif %}
+        </button>
+    </form>
+</div>
+{% endblock %}

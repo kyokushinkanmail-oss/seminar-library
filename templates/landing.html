@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}極真館組手セミナーライブラリ{% endblock %}
+
+{% block body %}
+<!-- ヒーロー -->
+<div class="hero">
+    <div class="container">
+        <div class="hero-logo">極</div>
+        <h1>極真館組手セミナー</h1>
+        <p>セミナー資料・動画配信システム</p>
+    </div>
+</div>
+
+<div class="container py-6">
+    {% if seminar %}
+    <!-- 今回のセミナー情報 -->
+    <div class="card mb-4">
+        <p class="seminar-date">{{ seminar.date_display }}</p>
+        <h2 style="font-size:1.2rem; font-weight:900; margin-bottom:6px; line-height:1.4;">
+            {{ seminar.title }}
+        </h2>
+        <p class="text-muted" style="font-size:0.95rem; line-height:1.6;">
+            {{ seminar.subtitle }}
+        </p>
+        <div class="mt-2">
+            {% for name in seminar.instructor_list %}
+            <span class="tag">{{ name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 受け取れるもの -->
+    <p class="section-title">受け取れるもの</p>
+    <div class="item-row mb-2">
+        <span class="item-icon">📖</span>
+        <span class="font-bold">セミナー資料（HTML形式でいつでも閲覧）</span>
+    </div>
+    <div class="item-row mb-2">
+        <span class="item-icon">🎬</span>
+        <span class="font-bold">セミナー動画（Zoom参加者は無料）</span>
+    </div>
+    <div class="item-row mb-4">
+        <span class="item-icon">📚</span>
+        <span class="font-bold">参加した回の資料が全てたまる</span>
+    </div>
+
+    <!-- 登録/ログインボタン -->
+    <a href="{{ url_for('register') }}" class="btn btn-red btn-block mb-2">
+        はじめての方 — 資料を受け取る
+    </a>
+    <a href="{{ url_for('login') }}" class="btn btn-outline btn-block mb-4">
+        2回目以降の方 — ログイン
+    </a>
+
+    {% else %}
+    <div class="card text-center py-4">
+        <p style="font-size:1.1rem; font-weight:700;">現在公開中のセミナーはありません</p>
+        <p class="text-muted mt-2">次回のセミナーをお待ちください</p>
+    </div>
+    {% endif %}
+
+    {% if upcoming %}
+    <!-- 次回セミナー -->
+    <div class="card card-yellow mt-4">
+        <p class="font-bold text-muted" style="font-size:0.85rem;">📅 次回セミナー</p>
+        <p style="font-size:1.1rem; font-weight:900; margin-top:8px;">{{ upcoming.date_display }}</p>
+        <p class="text-muted mt-2" style="font-size:0.95rem;">{{ upcoming.title }}（詳細は後日お知らせ）</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

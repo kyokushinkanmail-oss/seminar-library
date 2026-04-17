@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
+    <title>{% block title %}極真館組手セミナーライブラリ{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- QRコード生成用 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- 通知 -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="notification notification-{{ category }}" id="flash-notification">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% block body %}{% endblock %}
+
+    <script>
+    // 通知の自動非表示
+    document.addEventListener("DOMContentLoaded", function() {
+        var notif = document.getElementById("flash-notification");
+        if (notif) {
+            setTimeout(function() {
+                notif.style.transition = "opacity 0.5s";
+                notif.style.opacity = "0";
+                setTimeout(function() { notif.remove(); }, 500);
+            }, 3000);
+        }
+    });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

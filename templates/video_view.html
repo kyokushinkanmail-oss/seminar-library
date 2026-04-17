@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ video.title }} — 極真館組手セミナー{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('seminar_detail', seminar_id=seminar.id) }}" class="btn-back">← 戻る</a>
+        <span class="header-title">動画視聴</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- 動画プレーヤー -->
+    <div style="background:#000; border-radius:16px; overflow:hidden; margin-bottom:20px; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center;">
+        {% if video.video_url %}
+        <iframe
+            src="{{ video.video_url }}"
+            style="width:100%; height:100%; border:none;"
+            allowfullscreen
+            allow="autoplay; fullscreen; picture-in-picture"
+        ></iframe>
+        {% else %}
+        <div style="text-align:center; color:#fff; padding:20px;">
+            <p style="font-size:3rem; margin-bottom:12px;">▶️</p>
+            <p style="font-size:1rem; font-weight:700;">動画は準備中です</p>
+            <p style="font-size:0.85rem; color:#a3a3a3; margin-top:8px;">
+                動画URLが設定されると、ここで視聴できます
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 動画情報 -->
+    <h1 style="font-size:1.3rem; font-weight:900; margin-bottom:6px;">{{ video.title }}</h1>
+    <p class="text-muted" style="font-size:0.9rem; margin-bottom:4px;">
+        {{ seminar.date_display }} — {{ seminar.title }}
+    </p>
+    <p class="text-muted text-sm">{{ video.duration }}</p>
+
+    {% if video.description %}
+    <div style="margin-top:20px; padding:16px; background:#fafafa; border:2px solid #e5e5e5; border-radius:12px;">
+        <p style="font-size:0.95rem; line-height:1.7;">{{ video.description }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

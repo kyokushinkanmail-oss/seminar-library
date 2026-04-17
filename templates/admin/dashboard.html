@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}管理画面 — 極真館組手セミナー{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <span class="header-title">⚙️ 管理ダッシュボード</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <a href="{{ url_for('admin_new_seminar', key=request.args.get('key','')) }}" class="btn btn-red btn-block mb-4">
+        ＋ 新規セミナー作成
+    </a>
+
+    <p class="section-title">セミナー一覧</p>
+
+    {% for seminar in seminars %}
+    <div class="card mb-2">
+        <p class="seminar-date">{{ seminar.date_display }}</p>
+        <h3 style="font-size:1rem; font-weight:900; margin-bottom:4px;">{{ seminar.title }}</h3>
+        <p class="text-muted text-sm">{{ seminar.subtitle }}</p>
+        <p class="text-muted text-sm">出席者: {{ seminar.attendances | length }}名</p>
+
+        <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+            <a href="{{ url_for('admin_qr', seminar_id=seminar.id, key=request.args.get('key','')) }}"
+               class="btn btn-outline btn-sm">QRコード</a>
+        </div>
+
+        <!-- Zoom参加者登録 -->
+        <details style="margin-top:12px;">
+            <summary style="font-size:0.85rem; font-weight:700; color:#737373; cursor:pointer;">
+                Zoom参加者を一括登録
+            </summary>
+            <form method="POST" action="{{ url_for('admin_mark_zoom', seminar_id=seminar.id) }}" style="margin-top:10px;">
+                <input type="hidden" name="key" value="{{ request.args.get('key','') }}">
+                <textarea name="phones" class="form-input" rows="4"
+                    placeholder="電話番号を1行に1つ入力&#10;090-1234-5678&#10;080-9876-5432"
+                    style="font-size:0.85rem; margin-bottom:8px;"></textarea>
+                <button type="submit" class="btn btn-red btn-sm">Zoom参加者として登録</button>
+            </form>
+        </details>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

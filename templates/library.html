@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}マイライブラリ — 極真館組手セミナー{% endblock %}
+
+{% block body %}
+<!-- ユーザーヘッダー -->
+<div class="user-header">
+    <div class="user-header-inner">
+        <div class="user-avatar">{{ user.name[0] }}</div>
+        <div>
+            <h1>{{ user.name }}さん</h1>
+            <p class="meta">参加セミナー {{ attendance_count }}回</p>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- 添削サービスバナー -->
+    <a href="{{ url_for('subscribe') }}" class="card card-red banner mb-4" style="text-decoration:none; display:flex;">
+        <span class="banner-icon">🥋</span>
+        <div>
+            <h3 style="font-size:1.05rem; font-weight:900; color:#7f1d1d; margin-bottom:4px;">
+                組手動画 添削サービス
+            </h3>
+            <p style="font-size:0.9rem; color:#991b1b; line-height:1.6; margin-bottom:10px;">
+                あなたの組手動画を先生が直接アドバイス！
+            </p>
+            <span style="display:inline-block; background:#b91c1c; color:#fff; font-weight:700; padding:8px 16px; border-radius:999px; font-size:0.9rem;">
+                月額300円 → 詳しく見る
+            </span>
+        </div>
+    </a>
+
+    <!-- セミナー一覧 -->
+    <p class="section-title">あなたの参加セミナー</p>
+
+    {% if seminars %}
+    {% for seminar in seminars %}
+    <a href="{{ url_for('seminar_detail', seminar_id=seminar.id) }}" class="card card-clickable" style="text-decoration:none; display:block; color:inherit;">
+        <p class="seminar-date">{{ seminar.date_display }}</p>
+        <h3 style="font-size:1.05rem; font-weight:900; margin-bottom:4px;">{{ seminar.title }}</h3>
+        <p class="text-muted" style="font-size:0.9rem;">{{ seminar.subtitle }}</p>
+        <div class="mt-2">
+            {% if seminar.materials | length > 0 %}
+            <span class="tag-small">📖 資料あり</span>
+            {% endif %}
+            {% if seminar.videos | length > 0 %}
+            <span class="tag-small">🎬 動画あり</span>
+            {% endif %}
+        </div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div class="card text-center py-4">
+        <p style="font-size:1rem;">まだ参加セミナーがありません</p>
+        <p class="text-muted text-sm mt-2">セミナー会場でQRコードをスキャンしてください</p>
+    </div>
+    {% endif %}
+
+    {% if upcoming %}
+    <!-- 次回セミナー -->
+    <div class="card card-yellow mt-4">
+        <p class="font-bold text-muted" style="font-size:0.85rem;">📅 次回セミナー</p>
+        <p style="font-size:1.05rem; font-weight:900; margin-top:8px;">{{ upcoming.date_display }}</p>
+        <p class="text-muted mt-2" style="font-size:0.9rem;">{{ upcoming.title }}</p>
+    </div>
+    {% endif %}
+
+    <!-- ログアウト -->
+    <div class="text-center mt-6">
+        <a href="{{ url_for('logout') }}" class="text-muted text-sm">ログアウト</a>
+    </div>
+</div>
+{% endblock %}
