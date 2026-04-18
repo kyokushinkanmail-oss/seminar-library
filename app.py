@@ -69,7 +69,6 @@ def generate_phone_hash(phone: str) -> str:
     normalized = phone.replace("-", "").replace(" ", "").strip()
     return hashlib.sha256(normalized.encode()).hexdigest()
 
-
 # ============================================
 # 公開ページ
 # ============================================
@@ -230,14 +229,21 @@ def seminar_detail(seminar_id):
     user = get_current_user()
     seminar = Seminar.query.get_or_404(seminar_id)
 
+    # 出席チェック
     attendance = Attendance.query.filter_by(
         user_id=user.id, seminar_id=seminar_id
     ).first()
 
+    # 資料一覧
     materials = Material.query.filter_by(seminar_id=seminar_id).all()
+
+    # 動画一覧
     videos = Video.query.filter_by(seminar_id=seminar_id).all()
+
+    # Zoom参加者チェック（出席方法がzoomの場合は動画無料）
     zoom_attended = attendance and attendance.method == "zoom"
 
+    # 購入済みチェック
     purchases = Purchase.query.filter_by(
         user_id=user.id, status="completed"
     ).all()
@@ -266,6 +272,7 @@ def view_material(material_id):
     material = Material.query.get_or_404(material_id)
     seminar = Seminar.query.get(material.seminar_id)
 
+    # アクセス権チェック：出席者 or 購入者
     attendance = Attendance.query.filter_by(
         user_id=user.id, seminar_id=material.seminar_id
     ).first()
@@ -292,11 +299,13 @@ def view_video(video_id):
     video = Video.query.get_or_404(video_id)
     seminar = Seminar.query.get(video.seminar_id)
 
+    # Zoom参加者は無料
     attendance = Attendance.query.filter_by(
         user_id=user.id, seminar_id=video.seminar_id
     ).first()
     zoom_attended = attendance and attendance.method == "zoom"
 
+    # 購入済みチェック
     purchased = Purchase.query.filter_by(
         user_id=user.id, video_id=video_id, status="completed"
     ).first()
@@ -322,12 +331,14 @@ def purchase_video(video_id):
     user = get_current_user()
     video = Video.query.get_or_404(video_id)
 
+    # 既に購入済みか確認
     existing = Purchase.query.filter_by(
         user_id=user.id, video_id=video_id, status="completed"
     ).first()
     if existing:
         return redirect(url_for("view_video", video_id=video_id))
 
+    # 購入レコード作成（pending状態）
     purchase = Purchase(
         user_id=user.id,
         video_id=video_id,
@@ -339,11 +350,13 @@ def purchase_video(video_id):
     db.session.add(purchase)
     db.session.commit()
 
+    # Stripe Payment Linkがある場合はリダイレクト
     if video.stripe_payment_link:
         return redirect(
             f"{video.stripe_payment_link}?client_reference_id=purchase_{purchase.id}"
         )
 
+    # なければデモモードで即完了
     purchase.status = "completed"
     purchase.completed_at = datetime.utcnow()
     db.session.commit()
@@ -380,6 +393,7 @@ def purchase_material(material_id):
             f"{material.stripe_payment_link}?client_reference_id=purchase_{purchase.id}"
         )
 
+    # デモモード
     purchase.status = "completed"
     purchase.completed_at = datetime.utcnow()
     db.session.commit()
@@ -535,6 +549,21 @@ def admin_mark_zoom(seminar_id):
 @app.route("/static/materials/<path:filename>")
 def serve_material(filename):
     return send_from_directory("static/materials", filename)
+
+
+@app.route("/sw.js")
+def service_worker():
+    """Service Workerをルートパスから配信（スコープを/にするため）"""
+    response = send_from_directory("static", "sw.js")
+    response.headers["Service-Worker-Allowed"] = "/"
+    response.headers["Content-Type"] = "application/javascript"
+    return response
+
+
+@app.route("/manifest.json")
+def manifest():
+    """マニフェストをルートパスからも配信"""
+    return send_from_directory("static", "manifest.json")
 
 
 # ============================================
