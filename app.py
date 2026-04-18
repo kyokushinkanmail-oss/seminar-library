@@ -27,7 +27,11 @@ _app_dir = os.path.dirname(os.path.abspath(__file__))
 _data_dir = os.path.join(_app_dir, "data")
 os.makedirs(_data_dir, exist_ok=True)
 _default_db = f"sqlite:///{os.path.join(_data_dir, 'seminar.db')}"
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", _default_db)
+_database_url = os.environ.get("DATABASE_URL", _default_db)
+# Render の Postgres は postgres:// で始まるが SQLAlchemy 2.x では postgresql:// が必要
+if _database_url.startswith("postgres://"):
+    _database_url = _database_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["STRIPE_SECRET_KEY"] = os.environ.get("STRIPE_SECRET_KEY", "")
 app.config["STRIPE_PUBLISHABLE_KEY"] = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
