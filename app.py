@@ -330,10 +330,13 @@ def download_material(material_id):
     # file_path は "materials/positioning.pdf" のように static 配下の相対パス
     # セキュリティ：ディレクトリトラバーサルを防ぐ
     safe_name = os.path.basename(material.file_path)
+    # ?dl=1 が指定された場合のみ強制ダウンロード（Files.appへ保存）
+    # それ以外はインライン表示（iframeプレビュー・新規タブ表示用）
+    force_download = request.args.get("dl") == "1"
     return send_from_directory(
         os.path.join(_app_dir, "static", "materials"),
         safe_name,
-        as_attachment=False,  # ブラウザで表示もダウンロードも可能
+        as_attachment=force_download,
         download_name=f"{material.title}.pdf",
     )
 
