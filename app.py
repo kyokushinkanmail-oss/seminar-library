@@ -302,6 +302,40 @@ def view_material(material_id):
     )
 
 
+@app.route("/material/<int:material_id>/download")
+@login_required
+def download_material(material_id):
+    """資料PDFをダウンロード（アクセス権チェック付き）"""
+    user = get_current_user()
+    material = Material.query.get_or_404(material_id)
+
+    # アクセス権チェック：出席者 or 購入者 or 無料
+    attendance = Attendance.query.filter_by(
+        user_id=user.id, seminar_id=material.seminar_id
+    ).first()
+    purchased = Purchase.query.filter_by(
+        user_id=user.id, material_id=material_id, status="completed"
+    ).first()
+
+    if not attendance and not purchased and not material.is_free:
+        flash("この資料にアクセスするには、セミナーへの参加または購入が必要です。", "error")
+        return redirect(url_for("library"))
+
+    if not material.file_path:
+        flash("この資料にはダウンロード可能なファイルがありません。", "error")
+        return redirect(url_for("view_material", material_id=material_id))
+
+    # file_path は "materials/positioning.pdf" のように static 配下の相対パス
+    # セキュリティ：ディレクトリトラバーサルを防ぐ
+    safe_name = os.path.basename(material.file_path)
+    return send_from_directory(
+        os.path.join(_app_dir, "static", "materials"),
+        safe_name,
+        as_attachment=False,  # ブラウザで表示もダウンロードも可能
+        download_name=f"{material.title}.pdf",
+    )
+
+
 @app.route("/video/<int:video_id>")
 @login_required
 def view_video(video_id):

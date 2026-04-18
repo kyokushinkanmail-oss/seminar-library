@@ -15,6 +15,25 @@
         <p class="seminar-date">{{ seminar.date_display }}</p>
         <h1 style="font-size:1.3rem; font-weight:900; margin-bottom:4px;">{{ material.title }}</h1>
         <p class="text-muted" style="font-size:0.85rem;">{{ seminar.title }} — {{ seminar.subtitle }}</p>
+
+        {% if material.file_path %}
+        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="{{ url_for('download_material', material_id=material.id) }}"
+               class="btn btn-primary btn-sm"
+               style="display:inline-flex; align-items:center; gap:6px;">
+                📄 PDFをダウンロード
+            </a>
+            <a href="{{ url_for('download_material', material_id=material.id) }}"
+               target="_blank" rel="noopener"
+               class="btn btn-outline btn-sm"
+               style="display:inline-flex; align-items:center; gap:6px;">
+                🖨 印刷用に開く
+            </a>
+        </div>
+        <p class="text-muted" style="font-size:0.78rem; margin-top:6px;">
+            下の本文と同じ内容のPDF版です。印刷や保存にどうぞ。
+        </p>
+        {% endif %}
     </div>
 
     <!-- HTML資料本文 -->
