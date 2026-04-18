@@ -33,6 +33,11 @@ app.config["STRIPE_SECRET_KEY"] = os.environ.get("STRIPE_SECRET_KEY", "")
 app.config["STRIPE_PUBLISHABLE_KEY"] = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 app.config["BASE_URL"] = os.environ.get("BASE_URL", "http://localhost:5000")
 
+# セッションを365日間保持（iPhone PWAでログイン状態を維持）
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = not app.debug
+
 db.init_app(app)
 
 with app.app_context():
@@ -127,6 +132,7 @@ def register():
         db.session.add(user)
         db.session.commit()
 
+        session.permanent = True
         session["user_id"] = user.id
         _process_pending_seminar(user)
         flash("登録が完了しました！セミナー資料をライブラリに追加しました。", "success")
@@ -152,6 +158,7 @@ def login():
         flash("この電話番号は登録されていません。新規登録してください。", "error")
         return redirect(url_for("register"))
 
+    session.permanent = True
     session["user_id"] = user.id
     _process_pending_seminar(user)
     flash(f"おかえりなさい、{user.name}さん！", "success")
