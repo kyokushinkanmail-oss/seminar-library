@@ -550,6 +550,42 @@ def admin_mark_zoom(seminar_id):
     return redirect(url_for("admin_dashboard", key=admin_key))
 
 
+@app.route("/admin/cleanup")
+def admin_cleanup():
+    """本番環境の整理用ワンショットエンドポイント（2026-04-20セミナー向け）
+    - 指定動画を削除
+    - 指定セミナーを非公開化
+    Usage: /admin/cleanup?key=<ADMIN_KEY>
+    """
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+
+    result = {"videos_deleted": [], "seminars_unpublished": [], "errors": []}
+
+    # 削除対象の動画タイトル
+    video_titles_to_delete = ["距離と角度の実演", "内側と外側のドリル"]
+    for title in video_titles_to_delete:
+        videos = Video.query.filter_by(title=title).all()
+        for v in videos:
+            result["videos_deleted"].append({"id": v.id, "title": v.title})
+            # 関連Purchaseは残す（購入履歴として）が、video_idをNoneに
+            Purchase.query.filter_by(video_id=v.id).update({"video_id": None})
+            db.session.delete(v)
+
+    # 非公開化対象のセミナータイトル（部分一致）
+    seminar_titles_to_unpublish = ["蹴り技"]
+    for keyword in seminar_titles_to_unpublish:
+        seminars = Seminar.query.filter(Seminar.title.contains(keyword)).all()
+        for s in seminars:
+            if s.is_published:
+                s.is_published = False
+                result["seminars_unpublished"].append({"id": s.id, "title": s.title})
+
+    db.session.commit()
+    return jsonify(result)
+
+
 # ============================================
 # 静的ファイル
 # ============================================
