@@ -562,8 +562,18 @@ def service_worker():
 
 @app.route("/manifest.json")
 def manifest():
-    """マニフェストをルートパスからも配信"""
-    return send_from_directory("static", "manifest.json")
+    """マニフェストをルートパスからも配信（PWA標準の Content-Type を明示）"""
+    response = send_from_directory("static", "manifest.json")
+    response.headers["Content-Type"] = "application/manifest+json; charset=utf-8"
+    response.headers["Cache-Control"] = "no-cache"
+    return response
+
+
+@app.route("/apple-touch-icon.png")
+@app.route("/apple-touch-icon-precomposed.png")
+def apple_touch_icon():
+    """iOS Safariがルートパスで自動取得するアイコンを配信"""
+    return send_from_directory("static/icons", "apple-touch-icon.png")
 
 
 # ============================================
