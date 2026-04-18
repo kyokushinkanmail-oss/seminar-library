@@ -11,6 +11,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    branch_name = db.Column(db.String(100))  # 支部名
     phone_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
     phone_last4 = db.Column(db.String(4))  # 表示用
     email = db.Column(db.String(255), nullable=True)

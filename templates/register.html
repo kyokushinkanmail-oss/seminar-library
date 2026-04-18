@@ -14,7 +14,7 @@
     </h2>
     <p class="text-muted mb-4" style="font-size:0.95rem; line-height:1.7;">
         {% if is_new %}
-        お名前と電話番号を登録すると、今後参加するセミナーの資料がたまっていきます。
+        支部名・お名前・電話番号を登録すると、今後参加するセミナーの資料がたまっていきます。
         {% else %}
         前回登録した電話番号を入力してください。
         {% endif %}
@@ -30,7 +30,12 @@
     <form method="POST" action="{% if is_new %}{{ url_for('register') }}{% else %}{{ url_for('login') }}{% endif %}">
         {% if is_new %}
         <div class="form-group">
-            <label class="form-label">お名前</label>
+            <label class="form-label">支部名</label>
+            <input type="text" name="branch_name" class="form-input" placeholder="例：千葉支部／東京本部" required autocomplete="organization">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">氏名（フルネーム）</label>
             <input type="text" name="name" class="form-input" placeholder="山田太郎" required autocomplete="name">
         </div>
         {% endif %}

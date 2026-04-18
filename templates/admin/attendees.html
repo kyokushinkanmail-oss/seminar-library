@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ seminar.title }} 登録者一覧 — 管理画面{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('admin_dashboard', key=key) }}" class="btn-back">← 戻る</a>
+        <span class="header-title">登録者一覧</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div style="background:#fef2f2; border:2px solid #fca5a5; border-radius:12px; padding:14px 16px; margin-bottom:20px;">
+        <p class="seminar-date" style="font-size:0.85rem;">{{ seminar.date_display }}</p>
+        <h1 style="font-size:1.15rem; font-weight:900; margin-bottom:2px;">{{ seminar.title }}</h1>
+        <p class="text-muted" style="font-size:0.85rem;">登録者数：<strong>{{ rows|length }}</strong>名</p>
+    </div>
+
+    {% if rows %}
+    <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+        <thead>
+            <tr style="background:#fef2f2;">
+                <th style="text-align:left; padding:8px 10px; border-bottom:2px solid #fca5a5;">#</th>
+                <th style="text-align:left; padding:8px 10px; border-bottom:2px solid #fca5a5;">支部名</th>
+                <th style="text-align:left; padding:8px 10px; border-bottom:2px solid #fca5a5;">氏名</th>
+                <th style="text-align:left; padding:8px 10px; border-bottom:2px solid #fca5a5;">電話下4桁</th>
+                <th style="text-align:left; padding:8px 10px; border-bottom:2px solid #fca5a5;">方法</th>
+                <th style="text-align:left; padding:8px 10px; border-bottom:2px solid #fca5a5;">登録日時</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for att, u in rows %}
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:8px 10px; color:#6b7280;">{{ loop.index }}</td>
+                <td style="padding:8px 10px;">{{ u.branch_name or '—' }}</td>
+                <td style="padding:8px 10px; font-weight:700;">{{ u.name }}</td>
+                <td style="padding:8px 10px; font-family:monospace;">****{{ u.phone_last4 or '' }}</td>
+                <td style="padding:8px 10px; font-size:0.8rem; color:#6b7280;">
+                    {% if att.method == 'qr' %}QR
+                    {% elif att.method == 'zoom' %}Zoom
+                    {% else %}{{ att.method }}
+                    {% endif %}
+                </td>
+                <td style="padding:8px 10px; font-size:0.8rem; color:#6b7280;">
+                    {{ att.attended_at.strftime('%m/%d %H:%M') if att.attended_at else '—' }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="text-muted" style="text-align:center; padding:40px 0;">まだ登録者がいません</p>
+    {% endif %}
+
+    <div style="margin-top:24px; text-align:center;">
+        <a href="{{ url_for('admin_dashboard', key=key) }}" class="btn btn-outline btn-sm">
+            ダッシュボードに戻る
+        </a>
+    </div>
+</div>
+{% endblock %}

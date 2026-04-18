@@ -115,10 +115,11 @@ def seminar_landing(seminar_slug):
 def register():
     """新規登録"""
     if request.method == "POST":
+        branch_name = request.form.get("branch_name", "").strip()
         name = request.form.get("name", "").strip()
         phone = request.form.get("phone", "").strip()
-        if not name or not phone:
-            flash("お名前と電話番号を入力してください", "error")
+        if not name or not phone or not branch_name:
+            flash("支部名・お名前・電話番号をすべて入力してください", "error")
             return render_template("register.html", is_new=True)
 
         phone_hash = generate_phone_hash(phone)
@@ -129,6 +130,7 @@ def register():
 
         user = User(
             name=name,
+            branch_name=branch_name,
             phone_hash=phone_hash,
             phone_last4=phone.replace("-", "")[-4:],
             created_at=datetime.utcnow()
@@ -550,6 +552,39 @@ def admin_qr(seminar_id):
     seminar = Seminar.query.get_or_404(seminar_id)
     qr_url = f"{app.config['BASE_URL']}/s/{seminar.slug}"
     return render_template("admin/qr.html", seminar=seminar, qr_url=qr_url, key=admin_key)
+
+
+@app.route("/admin/seminar/<int:seminar_id>/attendees")
+def admin_attendees(seminar_id):
+    """登録者（出席者）一覧"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    seminar = Seminar.query.get_or_404(seminar_id)
+    # 出席記録と user を結合して取得
+    rows = (
+        db.session.query(Attendance, User)
+        .join(User, Attendance.user_id == User.id)
+        .filter(Attendance.seminar_id == seminar_id)
+        .order_by(Attendance.attended_at.desc())
+        .all()
+    )
+    return render_template(
+        "admin/attendees.html",
+        seminar=seminar,
+        rows=rows,
+        key=admin_key,
+    )
+
+
+@app.route("/admin/users")
+def admin_users():
+    """全登録ユーザー一覧"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template("admin/users.html", users=users, key=admin_key)
 
 
 @app.route("/admin/seminar/<int:seminar_id>/zoom", methods=["POST"])
