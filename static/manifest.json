@@ -2,7 +2,7 @@
   "name": "極真館セミナーライブラリ",
   "short_name": "極真館セミナー",
   "description": "極真館組手セミナーの資料・動画配信アプリ",
-  "start_url": "/library",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#991b1b",
