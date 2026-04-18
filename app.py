@@ -86,6 +86,15 @@ def seminar_landing(seminar_slug):
     """QRコードからのセミナー別ランディング"""
     seminar = Seminar.query.filter_by(slug=seminar_slug).first_or_404()
     session["pending_seminar"] = seminar.id
+
+    # ログイン済みなら直接出席登録してライブラリへ
+    if "user_id" in session:
+        user = User.query.get(session["user_id"])
+        if user:
+            _process_pending_seminar(user)
+            flash(f"「{seminar.title}」の資料をライブラリに追加しました！", "success")
+            return redirect(url_for("library"))
+
     return render_template("landing.html", seminar=seminar, upcoming=None)
 
 
