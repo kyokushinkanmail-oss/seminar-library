@@ -402,19 +402,22 @@ SQUARE_DEFAULT_CHECKOUT_URL = "https://square.link/u/f8660Y6m"
 def _ensure_square_url_applied():
     """有料資料(price>0)で square_checkout_url が空のものに、デフォルトURLを一括設定（冪等）"""
     try:
-        from sqlalchemy import text
-        with db.engine.connect() as conn:
-            result = conn.execute(
-                text(
-                    "UPDATE materials SET square_checkout_url = :url "
-                    "WHERE (square_checkout_url IS NULL OR square_checkout_url = \'\') "
-                    "AND price > 0"
-                ),
-                {"url": SQUARE_DEFAULT_CHECKOUT_URL},
-            )
-            conn.commit()
-            print(f"[ensure_square_url_applied] updated rows: {result.rowcount}")
+        from models import Material
+        mats = Material.query.filter(Material.price > 0).all()
+        updated = 0
+        for m in mats:
+            cur = getattr(m, "square_checkout_url", None)
+            if not cur:
+                m.square_checkout_url = SQUARE_DEFAULT_CHECKOUT_URL
+                updated += 1
+        if updated:
+            db.session.commit()
+        print(f"[ensure_square_url_applied] total={len(mats)} updated={updated} url={SQUARE_DEFAULT_CHECKOUT_URL}")
     except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         print(f"[ensure_square_url_applied] skipped: {e}")
 
 
