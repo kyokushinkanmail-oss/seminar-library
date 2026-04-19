@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}資料ショップ — 極真館組手セミナー{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        {% if user %}
+        <a href="{{ url_for('library') }}" class="btn-back">← マイライブラリ</a>
+        {% else %}
+        <a href="{{ url_for('landing') }}" class="btn-back">← TOP</a>
+        {% endif %}
+        <span class="header-title">資料ショップ</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d); color:#f5ede0; padding:20px 18px; border-radius:14px; margin-bottom:18px; box-shadow:0 4px 14px rgba(0,0,0,0.15);">
+        <div style="font-size:10px; letter-spacing:3px; color:#c9a227; margin-bottom:4px;">KYOKUSHIN SEMINAR</div>
+        <h2 style="font-size:1.2rem; font-weight:900; margin:0 0 6px;">資料ショップ</h2>
+        <p style="font-size:0.88rem; opacity:0.8; margin:0; line-height:1.6;">
+            過去のセミナー資料を個別に購入できます。<br>
+            購入後はマイライブラリからいつでも閲覧可能です。
+        </p>
+    </div>
+
+    <form method="get" action="{{ url_for('shop') }}"
+          style="display:flex; gap:8px; margin-bottom:16px;">
+        <input type="text" name="q" value="{{ q }}"
+               placeholder="資料タイトルで検索"
+               style="flex:1; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.95rem;">
+        <button type="submit" class="btn btn-red btn-sm">検索</button>
+    </form>
+
+    {% if rows %}
+    {% for row in rows %}
+    <a href="{{ url_for('shop_material', material_id=row.material.id) }}"
+       class="card card-clickable"
+       style="display:block; text-decoration:none; color:inherit; margin-bottom:12px; padding:14px 16px; position:relative;">
+        {% if row.accessible %}
+        <span style="position:absolute; top:10px; right:10px; background:#d1fae5; color:#065f46; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:999px;">
+            ✔ 閲覧可能
+        </span>
+        {% endif %}
+        <p class="seminar-date" style="font-size:0.78rem; color:#737373; margin:0 0 4px;">
+            {{ row.seminar.date_display }}
+        </p>
+        <h3 style="font-size:1.02rem; font-weight:900; margin:0 0 4px; line-height:1.4; padding-right:70px;">
+            {{ row.material.title }}
+        </h3>
+        <p class="text-muted" style="font-size:0.82rem; margin:0 0 10px;">
+            {{ row.seminar.title }}
+        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            {% if row.material.price and row.material.price > 0 %}
+            <span style="font-size:1.1rem; font-weight:900; color:#b91c1c;">
+                ¥{{ '{:,}'.format(row.material.price) }}
+            </span>
+            {% else %}
+            <span style="font-size:0.88rem; color:#737373;">価格未設定</span>
+            {% endif %}
+            <span style="color:#737373; font-size:0.88rem;">詳細 →</span>
+        </div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div class="card" style="text-align:center; padding:40px 20px;">
+        <p class="text-muted">
+            {% if q %}該当する資料が見つかりません。{% else %}現在、販売中の資料はありません。{% endif %}
+        </p>
+        {% if q %}
+        <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm mt-2">検索をクリア</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1037,6 +1037,223 @@ def admin_cleanup():
 
 
 # ============================================
+# 資料一覧・ショップ（閲覧/販売）
+# ============================================
+def _extract_toc_from_html(html: str, max_items: int = 12):
+    """HTML本文からh1/h2/h3を抽出してTOCリストを返す"""
+    import re
+    if not html:
+        return []
+    toc = []
+    # コメント除去
+    cleaned = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
+    for m in re.finditer(r"<h([1-3])[^>]*>(.*?)</h\1>", cleaned, re.IGNORECASE | re.DOTALL):
+        level = int(m.group(1))
+        # タグ除去
+        text = re.sub(r"<[^>]+>", "", m.group(2)).strip()
+        text = re.sub(r"\s+", " ", text)
+        if text and len(text) < 100:
+            toc.append({"level": level, "text": text})
+            if len(toc) >= max_items:
+                break
+    return toc
+
+
+def _extract_preview_text(html: str, max_chars: int = 240) -> str:
+    """HTML本文から冒頭のテキストだけを抽出（サンプル用）"""
+    import re
+    if not html:
+        return ""
+    cleaned = re.sub(r"<!--.*?-->", "", html, flags=re.DOTALL)
+    cleaned = re.sub(r"<(script|style)[^>]*>.*?</\1>", "", cleaned,
+                     flags=re.IGNORECASE | re.DOTALL)
+    # 最初のh1/h2以降の本文を拾う
+    body = cleaned
+    m = re.search(r"</h[12]>", cleaned, re.IGNORECASE)
+    if m:
+        body = cleaned[m.end():]
+    # タグ除去
+    text = re.sub(r"<[^>]+>", " ", body)
+    text = re.sub(r"\s+", " ", text).strip()
+    if len(text) > max_chars:
+        text = text[:max_chars].rstrip() + "…"
+    return text
+
+
+@app.route("/my/materials")
+@login_required
+def my_materials():
+    """自分がアクセスできる資料をセミナー横断で一覧表示（検索・並び替え対応）"""
+    user = get_current_user()
+    q = (request.args.get("q") or "").strip()
+    sort = request.args.get("sort", "newest")
+
+    # 出席済みセミナーと購入済み資料からアクセス権のある資料を集める
+    attendances = Attendance.query.filter_by(user_id=user.id).all()
+    attended_seminar_ids = [a.seminar_id for a in attendances]
+
+    purchases = Purchase.query.filter_by(
+        user_id=user.id, status="completed"
+    ).all()
+    purchased_material_ids = [p.material_id for p in purchases if p.material_id]
+
+    # 資料取得（出席 OR 購入 OR 無料公開）
+    from sqlalchemy import or_
+    conds = []
+    if attended_seminar_ids:
+        conds.append(Material.seminar_id.in_(attended_seminar_ids))
+    if purchased_material_ids:
+        conds.append(Material.id.in_(purchased_material_ids))
+    conds.append(Material.is_free == True)  # noqa: E712
+
+    query = Material.query.filter(or_(*conds))
+    if q:
+        query = query.filter(Material.title.ilike(f"%{q}%"))
+
+    materials = query.all()
+
+    # セミナー情報をまとめて取得
+    seminar_ids = {m.seminar_id for m in materials}
+    seminars = {s.id: s for s in Seminar.query.filter(Seminar.id.in_(seminar_ids)).all()} if seminar_ids else {}
+
+    # rowsに整形
+    rows = []
+    for m in materials:
+        s = seminars.get(m.seminar_id)
+        if not s:
+            continue
+        rows.append({
+            "material": m,
+            "seminar": s,
+            "via_attendance": s.id in attended_seminar_ids,
+            "via_purchase": m.id in purchased_material_ids,
+            "has_pdf": bool(m.file_path),
+        })
+
+    # 並び替え
+    if sort == "oldest":
+        rows.sort(key=lambda r: r["seminar"].date)
+    elif sort == "title":
+        rows.sort(key=lambda r: r["material"].title)
+    else:  # newest
+        rows.sort(key=lambda r: r["seminar"].date, reverse=True)
+
+    return render_template(
+        "my_materials.html",
+        user=user,
+        rows=rows,
+        q=q,
+        sort=sort,
+    )
+
+
+@app.route("/shop")
+def shop():
+    """公開資料カタログ（非ログインでも閲覧可）"""
+    user = get_current_user() if "user_id" in session else None
+    q = (request.args.get("q") or "").strip()
+
+    # is_free=False かつ 公開セミナーに紐づく資料のみ
+    query = (
+        Material.query
+        .join(Seminar, Material.seminar_id == Seminar.id)
+        .filter(Seminar.is_published == True)  # noqa: E712
+        .filter(Material.is_free == False)     # noqa: E712
+    )
+    if q:
+        query = query.filter(Material.title.ilike(f"%{q}%"))
+
+    materials = query.all()
+    seminar_ids = {m.seminar_id for m in materials}
+    seminars = {s.id: s for s in Seminar.query.filter(Seminar.id.in_(seminar_ids)).all()} if seminar_ids else {}
+
+    # ユーザーが既にアクセスできるかのマップ
+    accessible_ids = set()
+    if user:
+        attended = {a.seminar_id for a in Attendance.query.filter_by(user_id=user.id).all()}
+        purchased = {p.material_id for p in Purchase.query.filter_by(user_id=user.id, status="completed").all() if p.material_id}
+        for m in materials:
+            if m.seminar_id in attended or m.id in purchased:
+                accessible_ids.add(m.id)
+
+    rows = []
+    for m in materials:
+        s = seminars.get(m.seminar_id)
+        if not s:
+            continue
+        rows.append({
+            "material": m,
+            "seminar": s,
+            "accessible": m.id in accessible_ids,
+        })
+    rows.sort(key=lambda r: r["seminar"].date, reverse=True)
+
+    return render_template("shop_index.html", user=user, rows=rows, q=q)
+
+
+@app.route("/shop/material/<int:material_id>")
+def shop_material(material_id):
+    """個別販売ページ（概要・目次・サンプル付き）"""
+    user = get_current_user() if "user_id" in session else None
+    material = Material.query.get_or_404(material_id)
+    seminar = Seminar.query.get(material.seminar_id)
+    if not seminar or not seminar.is_published:
+        abort(404)
+
+    # アクセス権判定
+    accessible = False
+    if user:
+        attended = Attendance.query.filter_by(
+            user_id=user.id, seminar_id=material.seminar_id
+        ).first()
+        purchased = Purchase.query.filter_by(
+            user_id=user.id, material_id=material_id, status="completed"
+        ).first()
+        accessible = bool(attended or purchased or material.is_free)
+
+    toc = _extract_toc_from_html(material.content_html or "", max_items=16)
+    preview = _extract_preview_text(material.content_html or "", max_chars=260)
+
+    return render_template(
+        "shop_material.html",
+        user=user,
+        material=material,
+        seminar=seminar,
+        toc=toc,
+        preview=preview,
+        accessible=accessible,
+    )
+
+
+@app.route("/admin/material/<int:material_id>/edit", methods=["GET", "POST"])
+def admin_edit_material(material_id):
+    """資料の価格・Stripe Payment Link を編集"""
+    admin_key = request.args.get("key", "") or request.form.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    material = Material.query.get_or_404(material_id)
+    seminar = Seminar.query.get(material.seminar_id)
+
+    if request.method == "POST":
+        try:
+            material.price = int(request.form.get("price", "0") or 0)
+        except ValueError:
+            material.price = 0
+        material.stripe_payment_link = (request.form.get("stripe_payment_link") or "").strip() or None
+        material.is_free = request.form.get("is_free") == "on"
+        db.session.commit()
+        flash("保存しました", "success")
+        return redirect(url_for("admin_edit_material", material_id=material.id, key=admin_key))
+
+    return render_template(
+        "admin/material_edit.html",
+        material=material,
+        seminar=seminar,
+        key=admin_key,
+    )
+
+
+# ============================================
 # 静的ファイル
 # ============================================
 @app.route("/static/materials/<path:filename>")

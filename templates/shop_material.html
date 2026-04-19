@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ material.title }} — 資料ショップ{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('shop') }}" class="btn-back">← ショップ</a>
+        <span class="header-title">資料詳細</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- ヒーロー -->
+    <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d); color:#f5ede0; padding:24px 20px; border-radius:14px; margin-bottom:18px; box-shadow:0 4px 14px rgba(0,0,0,0.15); position:relative; overflow:hidden;">
+        <div style="position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg,#a8201a,#c9a227);"></div>
+        <p style="font-size:11px; letter-spacing:2px; color:#c9a227; margin:0 0 6px;">
+            {{ seminar.date_display }}
+        </p>
+        <h1 style="font-size:1.3rem; font-weight:900; margin:0 0 8px; line-height:1.4;">
+            {{ material.title }}
+        </h1>
+        <p style="font-size:0.85rem; opacity:0.8; margin:0;">{{ seminar.title }}</p>
+        {% if seminar.subtitle %}
+        <p style="font-size:0.8rem; opacity:0.65; margin:4px 0 0;">{{ seminar.subtitle }}</p>
+        {% endif %}
+    </div>
+
+    <!-- 価格・購入CTA -->
+    <div class="card" style="padding:18px; margin-bottom:18px; text-align:center;">
+        {% if accessible %}
+        <p style="color:#065f46; font-weight:700; margin:0 0 10px;">✔ あなたはこの資料を閲覧できます</p>
+        <a href="{{ url_for('view_material', material_id=material.id) }}"
+           class="btn btn-red btn-block">📖 資料を開く</a>
+        {% elif material.price and material.price > 0 %}
+        <p style="font-size:0.78rem; color:#737373; margin:0 0 4px; letter-spacing:1px;">PRICE</p>
+        <p style="font-size:1.8rem; font-weight:900; color:#b91c1c; margin:0 0 14px;">
+            ¥{{ '{:,}'.format(material.price) }}
+            <span style="font-size:0.7rem; color:#737373; font-weight:400;">（税込）</span>
+        </p>
+        {% if material.stripe_payment_link %}
+        <form method="post" action="{{ url_for('purchase_material', material_id=material.id) }}">
+            <button type="submit" class="btn btn-red btn-block"
+                    {% if not user %}disabled title="ログインしてください"{% endif %}>
+                🛒 購入する
+            </button>
+        </form>
+        {% if not user %}
+        <p style="font-size:0.82rem; color:#737373; margin:10px 0 0;">
+            購入には<a href="{{ url_for('landing') }}" style="color:#b91c1c; font-weight:700;">ログイン</a>が必要です
+        </p>
+        {% endif %}
+        {% else %}
+        <p style="color:#737373; font-size:0.88rem; margin:0;">
+            ただいま準備中です。<br>
+            購入をご希望の方は<a href="mailto:" style="color:#b91c1c;">こちら</a>までお問い合わせください。
+        </p>
+        {% endif %}
+        {% else %}
+        <p style="color:#737373;">価格未設定</p>
+        {% endif %}
+    </div>
+
+    <!-- 概要・冒頭サンプル -->
+    {% if preview %}
+    <div class="card" style="padding:16px 18px; margin-bottom:18px;">
+        <p style="font-size:0.78rem; letter-spacing:1px; color:#a8201a; font-weight:700; margin:0 0 8px;">PREVIEW</p>
+        <p style="font-size:0.93rem; line-height:1.85; color:#404040; margin:0;">
+            {{ preview }}
+        </p>
+        <p style="font-size:0.78rem; color:#a3a3a3; margin:10px 0 0; font-style:italic;">
+            ※ 続きは購入後にご覧いただけます
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- 章立て（目次） -->
+    {% if toc %}
+    <div class="card" style="padding:16px 18px; margin-bottom:18px;">
+        <p style="font-size:0.78rem; letter-spacing:1px; color:#a8201a; font-weight:700; margin:0 0 10px;">CONTENTS</p>
+        <ul style="list-style:none; padding:0; margin:0;">
+            {% for item in toc %}
+            <li style="padding:6px 0; border-bottom:1px dashed #e5e5e5; padding-left:{{ (item.level - 1) * 14 }}px; font-size:{{ '0.95rem' if item.level == 1 else '0.88rem' }}; color:{{ '#1a1a1a' if item.level == 1 else '#525252' }};">
+                {% if item.level == 1 %}<strong>{% endif %}
+                {{ item.text }}
+                {% if item.level == 1 %}</strong>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- 戻る -->
+    <a href="{{ url_for('shop') }}" class="btn btn-outline btn-block">← ショップ一覧に戻る</a>
+</div>
+{% endblock %}

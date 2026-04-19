@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}資料編集 — {{ material.title }}{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('admin_dashboard', key=key) }}" class="btn-back">← 戻る</a>
+        <span class="header-title">資料の販売設定</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, msg in messages %}
+        <div class="card" style="background:#ecfdf5; border-color:#10b981; color:#065f46; padding:10px 14px; margin-bottom:14px; font-weight:700;">
+            {{ msg }}
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="card" style="padding:14px 16px; margin-bottom:18px; background:#fef2f2; border-color:#fca5a5;">
+        <p class="seminar-date" style="margin:0 0 4px;">{{ seminar.date_display }}</p>
+        <h2 style="font-size:1.05rem; font-weight:900; margin:0 0 2px;">{{ material.title }}</h2>
+        <p class="text-muted text-sm" style="margin:0;">{{ seminar.title }}</p>
+    </div>
+
+    <form method="post" action="{{ url_for('admin_edit_material', material_id=material.id) }}">
+        <input type="hidden" name="key" value="{{ key }}">
+
+        <label style="display:block; font-size:0.85rem; font-weight:700; color:#404040; margin-bottom:6px;">
+            価格（円）
+        </label>
+        <input type="number" name="price" value="{{ material.price or 0 }}" min="0" step="100"
+               style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:1rem; margin-bottom:14px;">
+
+        <label style="display:block; font-size:0.85rem; font-weight:700; color:#404040; margin-bottom:6px;">
+            Stripe Payment Link URL
+        </label>
+        <input type="url" name="stripe_payment_link"
+               value="{{ material.stripe_payment_link or '' }}"
+               placeholder="https://buy.stripe.com/..."
+               style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.92rem; margin-bottom:6px;">
+        <p style="font-size:0.78rem; color:#737373; margin:0 0 14px;">
+            Stripeダッシュボードで作成した Payment Link の URL を貼り付けてください。<br>
+            空欄の場合、購入ボタンを押しても決済に進めません（準備中表示）。
+        </p>
+
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:18px; font-size:0.92rem; color:#404040;">
+            <input type="checkbox" name="is_free" {% if material.is_free %}checked{% endif %}
+                   style="width:18px; height:18px;">
+            無料公開（ログイン不要で誰でも閲覧可）
+        </label>
+
+        <button type="submit" class="btn btn-red btn-block">保存</button>
+    </form>
+
+    <div style="display:flex; gap:8px; margin-top:14px;">
+        <a href="{{ url_for('shop_material', material_id=material.id) }}"
+           target="_blank" class="btn btn-outline btn-block">
+            👁 販売ページを開く
+        </a>
+        <a href="{{ url_for('admin_material_qr', material_id=material.id, key=key) }}"
+           class="btn btn-outline btn-block">
+            📱 資料QR
+        </a>
+    </div>
+</div>
+{% endblock %}

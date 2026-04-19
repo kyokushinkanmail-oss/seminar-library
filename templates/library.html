@@ -32,6 +32,20 @@
     </a>
     #}
 
+    <!-- クイックリンク -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px;">
+        <a href="{{ url_for('my_materials') }}" class="card card-clickable" style="display:block; text-align:center; padding:14px 10px; text-decoration:none; color:inherit;">
+            <div style="font-size:1.6rem; line-height:1; margin-bottom:4px;">📚</div>
+            <div style="font-size:0.88rem; font-weight:700;">資料一覧</div>
+            <div style="font-size:0.72rem; color:#737373; margin-top:2px;">セミナー横断で検索</div>
+        </a>
+        <a href="{{ url_for('shop') }}" class="card card-clickable" style="display:block; text-align:center; padding:14px 10px; text-decoration:none; color:inherit;">
+            <div style="font-size:1.6rem; line-height:1; margin-bottom:4px;">🛒</div>
+            <div style="font-size:0.88rem; font-weight:700;">ショップ</div>
+            <div style="font-size:0.72rem; color:#737373; margin-top:2px;">過去資料を購入</div>
+        </a>
+    </div>
+
     <!-- セミナー一覧 -->
     <p class="section-title">あなたの参加セミナー</p>
 

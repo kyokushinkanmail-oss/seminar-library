@@ -44,7 +44,9 @@
                         {{ m.title }}
                     </span>
                     <a href="{{ url_for('admin_material_qr', material_id=m.id, key=request.args.get('key','')) }}"
-                       class="btn btn-outline btn-sm" style="white-space:nowrap;">資料QR</a>
+                       class="btn btn-outline btn-sm" style="white-space:nowrap;">QR</a>
+                    <a href="{{ url_for('admin_edit_material', material_id=m.id, key=request.args.get('key','')) }}"
+                       class="btn btn-outline btn-sm" style="white-space:nowrap;">販売</a>
                 </div>
                 {% endfor %}
             </div>
