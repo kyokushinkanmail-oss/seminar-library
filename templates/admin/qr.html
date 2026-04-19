@@ -13,8 +13,12 @@
     <h2 style="font-size:1.2rem; font-weight:900; margin-bottom:6px;">{{ seminar.title }}</h2>
     <p class="text-muted mb-4">{{ seminar.date_display }}</p>
 
-    <!-- QRコード -->
-    <div id="qrcode" style="display:inline-block; padding:16px; background:#fff; border:2px solid #e5e5e5; border-radius:16px; margin-bottom:20px;"></div>
+    <!-- QRコード（サーバ生成PNG、確実にスキャン可能） -->
+    <div style="display:inline-block; padding:16px; background:#fff; border:2px solid #e5e5e5; border-radius:16px; margin-bottom:20px;">
+        <img src="{{ url_for('admin_seminar_qr_png', seminar_id=seminar.id, key=key) }}"
+             alt="QRコード" id="qr-img"
+             style="display:block; width:280px; height:280px;">
+    </div>
 
     <p style="font-size:0.85rem; color:#737373; word-break:break-all; margin-bottom:20px;">
         {{ qr_url }}
@@ -25,31 +29,21 @@
         読み取ると資料が自動でライブラリに追加されます。
     </p>
 
-    <!-- 印刷用ボタン -->
-    <button onclick="window.print()" class="btn btn-outline btn-block mt-4">
-        印刷する
-    </button>
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
+        <a href="{{ url_for('admin_seminar_qr_png', seminar_id=seminar.id, key=key) }}"
+           download="QR_{{ seminar.slug }}.png" class="btn btn-red btn-block">
+            📥 QR画像をダウンロード
+        </a>
+        <button onclick="window.print()" class="btn btn-outline btn-block">
+            🖨 印刷する
+        </button>
+    </div>
 </div>
 
 <style>
 @media print {
-    .header, .btn { display: none !important; }
+    .header, .btn, a.btn { display: none !important; }
     .container { max-width: 100%; }
 }
 </style>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    new QRCode(document.getElementById("qrcode"), {
-        text: "{{ qr_url }}",
-        width: 280,
-        height: 280,
-        colorDark: "#1a1a1a",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
-});
-</script>
 {% endblock %}

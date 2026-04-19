@@ -885,6 +885,52 @@ def admin_material_qr(material_id):
     )
 
 
+def _make_qr_png(url: str) -> bytes:
+    """URLからPNGのQRコードを生成してbytesで返す（サーバサイド、確実にスキャン可能）"""
+    import io
+    import qrcode
+    from qrcode.constants import ERROR_CORRECT_H
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=ERROR_CORRECT_H,
+        box_size=12,
+        border=4,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="#1e2761", back_color="#ffffff")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+@app.route("/admin/seminar/<int:seminar_id>/qr.png")
+def admin_seminar_qr_png(seminar_id):
+    """セミナーQR（PNG直生成。クライアントqrcodejs非依存で確実）"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    seminar = Seminar.query.get_or_404(seminar_id)
+    qr_url = f"{app.config['BASE_URL']}/s/{seminar.slug}"
+    from flask import Response
+    return Response(_make_qr_png(qr_url), mimetype="image/png",
+                    headers={"Cache-Control": "public, max-age=300"})
+
+
+@app.route("/admin/material/<int:material_id>/qr.png")
+def admin_material_qr_png(material_id):
+    """資料QR（PNG直生成。クライアントqrcodejs非依存で確実）"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    material = Material.query.get_or_404(material_id)
+    qr_url = f"{app.config['BASE_URL']}/material/{material.id}"
+    from flask import Response
+    return Response(_make_qr_png(qr_url), mimetype="image/png",
+                    headers={"Cache-Control": "public, max-age=300"})
+
+
+
 @app.route("/admin/seminar/<int:seminar_id>/attendees")
 def admin_attendees(seminar_id):
     """登録者（出席者）一覧"""

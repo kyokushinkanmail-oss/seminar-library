@@ -16,8 +16,12 @@
         <p class="text-muted text-sm" style="margin:0;">{{ seminar.title }}</p>
     </div>
 
-    <!-- QRコード -->
-    <div id="qrcode" style="display:inline-block; padding:16px; background:#fff; border:2px solid #e5e5e5; border-radius:16px; margin-bottom:16px;"></div>
+    <!-- QRコード（サーバ生成PNG、確実にスキャン可能） -->
+    <div style="display:inline-block; padding:16px; background:#fff; border:2px solid #e5e5e5; border-radius:16px; margin-bottom:16px;">
+        <img src="{{ url_for('admin_material_qr_png', material_id=material.id, key=key) }}"
+             alt="資料QRコード" id="qr-img"
+             style="display:block; width:280px; height:280px;">
+    </div>
 
     <p style="font-size:0.82rem; color:#737373; word-break:break-all; margin-bottom:18px;">
         {{ qr_url }}
@@ -29,19 +33,17 @@
         <span style="color:#991b1b; font-size:0.85rem;">※ 閲覧にはログインが必要です。</span>
     </p>
 
-    <!-- アクションボタン -->
     <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
-        <button onclick="downloadQR()" class="btn btn-red btn-block">
+        <a href="{{ url_for('admin_material_qr_png', material_id=material.id, key=key) }}"
+           download="QR_material_{{ material.id }}.png" class="btn btn-red btn-block">
             📥 QR画像をダウンロード
-        </button>
+        </a>
         <button onclick="window.print()" class="btn btn-outline btn-block">
             🖨 印刷する
         </button>
-        {% if material.file_path %}
         <a href="{{ qr_url }}" target="_blank" class="btn btn-outline btn-block">
             👁 資料ページを開く（確認用）
         </a>
-        {% endif %}
     </div>
 </div>
 
@@ -51,41 +53,4 @@
     .container { max-width: 100%; }
 }
 </style>
-{% endblock %}
-
-{% block scripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    new QRCode(document.getElementById("qrcode"), {
-        text: "{{ qr_url }}",
-        width: 280,
-        height: 280,
-        colorDark: "#1e2761",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
-});
-
-function downloadQR() {
-    // qrcode.js はcanvas もしくは img を生成する。両方対応。
-    var container = document.getElementById("qrcode");
-    var canvas = container.querySelector("canvas");
-    var imgEl = container.querySelector("img");
-    var dataUrl = null;
-    if (canvas) {
-        dataUrl = canvas.toDataURL("image/png");
-    } else if (imgEl) {
-        dataUrl = imgEl.src;
-    } else {
-        alert("QRコードの生成に失敗しました");
-        return;
-    }
-    var a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = "QR_{{ material.title | replace(' ', '_') | replace('/', '_') }}.png";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-</script>
 {% endblock %}
