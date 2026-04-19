@@ -48,6 +48,61 @@ with app.app_context():
     init_db(app)
 
 
+def _ensure_kinni_material():
+    """4/19セミナー4部「肘・膝」資料がDBに無ければ追加する（冪等）"""
+    try:
+        from models import Material, Seminar
+        # 既に存在していたらスキップ
+        existing = Material.query.filter(
+            (Material.file_path == "materials/kinni.pdf")
+            | (Material.title.like("%肘%膝%"))
+        ).first()
+        if existing:
+            # file_pathだけ未設定なら補完
+            if not existing.file_path:
+                existing.file_path = "materials/kinni.pdf"
+                db.session.commit()
+            return
+
+        # ポジショニング資料と同じセミナー（4/19）を取得
+        base = Material.query.filter(Material.title.like("%ポジショニング%")).first()
+        seminar_id = base.seminar_id if base else None
+        if not seminar_id:
+            # フォールバック：最初のセミナー
+            first_seminar = Seminar.query.order_by(Seminar.date.desc()).first()
+            if not first_seminar:
+                return
+            seminar_id = first_seminar.id
+
+        body_path = os.path.join(os.path.dirname(__file__), "static", "materials", "kinni_body.html")
+        if not os.path.exists(body_path):
+            return
+        with open(body_path, "r", encoding="utf-8") as f:
+            html = f.read()
+
+        m = Material(
+            seminar_id=seminar_id,
+            title="肘・膝セミナー — 近距離戦の最強武器",
+            content_html=html,
+            file_path="materials/kinni.pdf",
+            is_free=False,
+            price=500,
+            sort_order=4,
+        )
+        db.session.add(m)
+        db.session.commit()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_kinni] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_kinni_material()
+
+
 # ============================================
 # ヘルパー
 # ============================================
@@ -297,10 +352,21 @@ def view_material(material_id):
         flash("この資料にアクセスするには、セミナーへの参加または購入が必要です。", "error")
         return redirect(url_for("library"))
 
+    # 資料ごとのスライド画像設定（file_pathのbasename stemで分岐）
+    slide_config_map = {
+        "positioning": {"dir": "slides", "count": 20},
+        "kinni": {"dir": "slides_kinni", "count": 16},
+    }
+    slide_info = None
+    if material.file_path:
+        stem = os.path.splitext(os.path.basename(material.file_path))[0]
+        slide_info = slide_config_map.get(stem)
+
     return render_template(
         "material_view.html",
         material=material,
         seminar=seminar,
+        slide_info=slide_info,
     )
 
 

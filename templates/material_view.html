@@ -16,14 +16,14 @@
         <h1 style="font-size:1.3rem; font-weight:900; margin-bottom:4px;">{{ material.title }}</h1>
         <p class="text-muted" style="font-size:0.85rem;">{{ seminar.title }} — {{ seminar.subtitle }}</p>
 
-        {% if material.file_path %}
+        {% if slide_info %}
         <p class="text-muted" style="font-size:0.82rem; margin-top:14px; line-height:1.55;">
-            📑 全20スライドです。横にスワイプしてめくれます。画像を長押しすると「写真に追加」で保存できます。
+            📑 全{{ slide_info.count }}スライドです。横にスワイプしてめくれます。画像を長押しすると「写真に追加」で保存できます。
         </p>
         {% endif %}
     </div>
 
-    {% if material.file_path %}
+    {% if slide_info %}
     <!-- スライドカルーセル（横スワイプ、scroll-snap） -->
     <style>
         .slide-carousel-wrap {
@@ -92,20 +92,20 @@
     <div class="slide-carousel-wrap">
         <div class="slide-carousel-bar">
             <span>📑 スライド資料</span>
-            <span><span id="slide-pos">1</span> / 20</span>
+            <span><span id="slide-pos">1</span> / {{ slide_info.count }}</span>
         </div>
         <div class="slide-carousel-track" id="slide-viewer">
-            {% for n in range(1, 21) %}
+            {% for n in range(1, slide_info.count + 1) %}
             <div class="slide-carousel-item">
-                <img src="/static/materials/slides/slide-{{ '%02d' % n }}.jpg"
-                     alt="スライド {{ n }} / 20"
+                <img src="/static/materials/{{ slide_info.dir }}/slide-{{ '%02d' % n }}.jpg"
+                     alt="スライド {{ n }} / {{ slide_info.count }}"
                      loading="{% if n <= 2 %}eager{% else %}lazy{% endif %}">
-                <div class="slide-carousel-num">{{ n }} / 20</div>
+                <div class="slide-carousel-num">{{ n }} / {{ slide_info.count }}</div>
             </div>
             {% endfor %}
         </div>
         <div class="slide-carousel-dots" id="slide-dots">
-            {% for n in range(1, 21) %}
+            {% for n in range(1, slide_info.count + 1) %}
             <div class="slide-dot{% if n == 1 %} active{% endif %}" data-idx="{{ n - 1 }}"></div>
             {% endfor %}
         </div>
@@ -121,8 +121,9 @@
             var w = viewer.clientWidth;
             if (w === 0) return;
             var idx = Math.round(viewer.scrollLeft / w);
+            var total = {{ slide_info.count }};
             if (idx < 0) idx = 0;
-            if (idx > 19) idx = 19;
+            if (idx > total - 1) idx = total - 1;
             pos.textContent = (idx + 1);
             for (var i = 0; i < dots.length; i++) {
                 if (i === idx) dots[i].classList.add('active');
