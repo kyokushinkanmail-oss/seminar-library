@@ -542,7 +542,7 @@ def generate_phone_hash(phone: str) -> str:
 # ============================================
 @app.route("/")
 def landing():
-    """トップ — 最新セミナー情報を表示"""
+    """トップ — 最新セミナー情報＋ソーシャルプルーフ"""
     latest = Seminar.query.filter(
         Seminar.is_published == True
     ).order_by(Seminar.date.desc()).first()
@@ -550,7 +550,34 @@ def landing():
         Seminar.date > datetime.utcnow(),
         Seminar.is_published == True
     ).order_by(Seminar.date.asc()).first()
-    return render_template("landing.html", seminar=latest, upcoming=upcoming)
+
+    # 集客ファネル用の社会的証明（軽いクエリで集計）
+    try:
+        total_users = User.query.count()
+        total_seminars = Seminar.query.filter(Seminar.is_published == True).count()
+        total_materials = Material.query.count()
+    except Exception:
+        total_users = total_seminars = total_materials = 0
+
+    # 直近セミナーの参加者数（ティーザー）
+    latest_attendees = 0
+    if latest:
+        try:
+            latest_attendees = Attendance.query.filter_by(seminar_id=latest.id).count()
+        except Exception:
+            pass
+
+    return render_template(
+        "landing.html",
+        seminar=latest,
+        upcoming=upcoming,
+        stats={
+            "users": total_users,
+            "seminars": total_seminars,
+            "materials": total_materials,
+            "latest_attendees": latest_attendees,
+        },
+    )
 
 
 @app.route("/s/<seminar_slug>")
