@@ -99,7 +99,7 @@ def _ensure_kinni_material():
             content_html=html,
             file_path="materials/kinni.pdf",
             is_free=False,
-            price=500,
+            price=2000,
             sort_order=4,
         )
         db.session.add(m)
@@ -329,7 +329,7 @@ def _ensure_3bu_material():
             content_html=latest_html,
             file_path=None,
             is_free=False,
-            price=500,
+            price=2000,
             sort_order=1,
         )
         db.session.add(m)
@@ -344,6 +344,27 @@ def _ensure_3bu_material():
 
 with app.app_context():
     _ensure_3bu_material()
+
+
+def _ensure_material_price_2000():
+    """既存のMaterialの価格を¥2000に引き上げる（旧デフォルト500の資料のみ対象・冪等）"""
+    try:
+        from models import Material
+        updated = Material.query.filter_by(price=500).update({"price": 2000})
+        if updated:
+            db.session.commit()
+            print(f"[ensure_price_2000] updated {updated} materials")
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_price_2000] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_material_price_2000()
+
 
 
 
