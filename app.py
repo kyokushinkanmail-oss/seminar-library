@@ -175,6 +175,105 @@ with app.app_context():
     _ensure_april19_split()
 
 
+def _ensure_april19_schedule():
+    """4/19の4コマの正式タイトル・副題・時刻・資料配置を設定する（冪等）。
+
+    実際のスケジュール:
+      一部 10:00-12:00 ポジショニングとアングル（資料: ポジショニング）
+      二部 13:00-15:00 技術への展開: 肘・膝編（資料: 肘・膝）
+      三部 16:00-18:00 オンライン組手研究会（資料なし）
+      四部 19:00-21:00 組手会（資料なし）
+    """
+    try:
+        from models import Material, Seminar
+        from datetime import datetime
+
+        base_mat = Material.query.filter(Material.title.like("%ポジショニング%")).first()
+        if not base_mat:
+            return
+        base = Seminar.query.get(base_mat.seminar_id)
+        if not base:
+            return
+
+        # 4コマ分のセミナーを取得
+        parts = {1: base}
+        for n in (2, 3, 4):
+            s = Seminar.query.filter_by(slug=f"{base.slug}-{n}").first()
+            if not s:
+                return  # split未実行なら諦める
+            parts[n] = s
+
+        meta = {
+            1: {
+                "title": "4/19 組手セミナー 一部（10:00-12:00）",
+                "subtitle": "ポジショニングとアングル — 有利を作る配置の本質",
+                "description": (
+                    "ポジショニングが大事だと言われますが、位置だけでは有利は作れません。"
+                    "鍵になるのはアングルという概念です。"
+                    "今回はポジショニングとアングルの関係から、なぜ有利が生まれるのかを整理し、"
+                    "実戦で使える形まで落とし込みます。これが理解出来れば、組手は圧倒的に変わります。"
+                ),
+                "date": datetime(2026, 4, 19, 10, 0),
+            },
+            2: {
+                "title": "4/19 組手セミナー 二部（13:00-15:00）",
+                "subtitle": "技術への展開：肘・膝編（接近戦）— 避けられない近距離戦の武器",
+                "description": (
+                    "競技の性質上、避けることのできない接近戦。そこで差を生むのが、肘と膝です。"
+                    "膝は昔からある技術ですが、肘は近年、有効な技術として試合の場に現れてきています。"
+                    "今回は基本形の確認から入り、実際の組手の中でどう使うのかまで落とし込みます。"
+                    "接近戦を制することが、試合を制することに直結します。"
+                ),
+                "date": datetime(2026, 4, 19, 13, 0),
+            },
+            3: {
+                "title": "4/19 組手セミナー 三部（16:00-18:00）",
+                "subtitle": "オンライン組手研究会 — 質問回答セッション",
+                "description": (
+                    "前回に引き続き、組手や技術に関する疑問に、時間の許す限り答えていくセッションです。"
+                    "事前にWEBで質問を募集し、当日はオンラインからのリアルタイム質問にも対応します。"
+                ),
+                "date": datetime(2026, 4, 19, 16, 0),
+            },
+            4: {
+                "title": "4/19 組手セミナー 四部（19:00-21:00）",
+                "subtitle": "組手会 — 学んだ技術の実戦検証",
+                "description": (
+                    "当日の内容はもちろん、組手中に気付いたことや必要なことを"
+                    "アドバイスしながら行います。"
+                ),
+                "date": datetime(2026, 4, 19, 19, 0),
+            },
+        }
+
+        for n, m in meta.items():
+            s = parts[n]
+            s.title = m["title"]
+            s.subtitle = m["subtitle"]
+            s.description = m["description"]
+            s.date = m["date"]
+
+        # 肘・膝Materialを二部に付け替える（以前は四部に配置した）
+        kinni = Material.query.filter(
+            (Material.title.like("%肘%膝%")) | (Material.file_path == "materials/kinni.pdf")
+        ).first()
+        if kinni and kinni.seminar_id != parts[2].id:
+            kinni.seminar_id = parts[2].id
+
+        db.session.commit()
+        print(f"[ensure_april19_schedule] schedule metadata synced")
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_april19_schedule] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_april19_schedule()
+
+
 # ============================================
 # ヘルパー
 # ============================================
