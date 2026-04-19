@@ -57,10 +57,23 @@ def _ensure_kinni_material():
             (Material.file_path == "materials/kinni.pdf")
             | (Material.title.like("%肘%膝%"))
         ).first()
+        # ファイルからHTMLを常にロード（更新反映のため）
+        body_path_check = os.path.join(os.path.dirname(__file__), "static", "materials", "kinni_body.html")
+        latest_html = None
+        if os.path.exists(body_path_check):
+            with open(body_path_check, "r", encoding="utf-8") as f:
+                latest_html = f.read()
+
         if existing:
-            # file_pathだけ未設定なら補完
+            changed = False
             if not existing.file_path:
                 existing.file_path = "materials/kinni.pdf"
+                changed = True
+            # ファイルのHTMLが更新されていたらDBに反映
+            if latest_html and existing.content_html != latest_html:
+                existing.content_html = latest_html
+                changed = True
+            if changed:
                 db.session.commit()
             return
 
