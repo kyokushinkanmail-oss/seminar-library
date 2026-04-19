@@ -103,6 +103,78 @@ with app.app_context():
     _ensure_kinni_material()
 
 
+def _ensure_april19_split():
+    """4/19セミナーを4コマ（一部〜四部）に分割する（冪等）。
+
+    - 既存Seminarは「一部」として維持（slug保持 → 印刷済QR・既存Attendanceそのまま）
+    - 二部/三部/四部 のSeminarを新規作成（slug: <base>-2, -3, -4）
+    - 肘・膝Materialを四部に付け替える
+    - ポジショニングMaterialは一部に残す
+    """
+    try:
+        from models import Material, Seminar
+        base_mat = Material.query.filter(Material.title.like("%ポジショニング%")).first()
+        if not base_mat:
+            return
+        base_seminar = Seminar.query.get(base_mat.seminar_id)
+        if not base_seminar:
+            return
+
+        # 既に分割済みならスキップ
+        part2_slug = f"{base_seminar.slug}-2"
+        if Seminar.query.filter_by(slug=part2_slug).first():
+            return
+
+        # 一部タイトル整理
+        if "一部" not in base_seminar.title:
+            base_seminar.title = f"{base_seminar.title}（一部・ポジショニング）"
+
+        new_parts = [
+            ("二部", 2),
+            ("三部", 3),
+            ("四部・肘膝", 4),
+        ]
+        created = {}
+        for label, n in new_parts:
+            slug_n = f"{base_seminar.slug}-{n}"
+            existing = Seminar.query.filter_by(slug=slug_n).first()
+            if existing:
+                created[n] = existing
+                continue
+            s = Seminar(
+                title=f"4/19 組手セミナー（{label}）",
+                subtitle=base_seminar.subtitle,
+                slug=slug_n,
+                date=base_seminar.date,
+                instructors=base_seminar.instructors,
+                description=base_seminar.description,
+                is_published=True,
+            )
+            db.session.add(s)
+            db.session.flush()
+            created[n] = s
+
+        # 肘・膝Materialを四部へ付け替え
+        kinni = Material.query.filter(
+            (Material.title.like("%肘%膝%")) | (Material.file_path == "materials/kinni.pdf")
+        ).first()
+        if kinni and 4 in created:
+            kinni.seminar_id = created[4].id
+
+        db.session.commit()
+        print(f"[ensure_april19_split] 4/19 split completed (base slug: {base_seminar.slug})")
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_april19_split] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_april19_split()
+
+
 # ============================================
 # ヘルパー
 # ============================================
