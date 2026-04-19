@@ -17,6 +17,7 @@ class User(db.Model):
     email = db.Column(db.String(255), nullable=True)
     is_subscriber = db.Column(db.Boolean, default=False)  # 添削サブスク
     stripe_customer_id = db.Column(db.String(255), nullable=True)
+    remember_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # PWA自動再ログイン用
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     attendances = db.relationship("Attendance", back_populates="user")

@@ -425,6 +425,83 @@ with app.app_context():
     _ensure_square_url_applied()
 
 
+REMEMBER_COOKIE_NAME = "rt"
+REMEMBER_COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 365日
+
+def _ensure_remember_token_column():
+    """users.remember_token カラムを追加（冪等）"""
+    try:
+        from sqlalchemy import text
+        dialect = db.engine.dialect.name
+        with db.engine.connect() as conn:
+            if dialect == "postgresql":
+                conn.execute(text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS remember_token VARCHAR(64)"
+                ))
+                conn.execute(text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_remember_token "
+                    "ON users(remember_token) WHERE remember_token IS NOT NULL"
+                ))
+            else:
+                cols = [r[1] for r in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+                if "remember_token" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN remember_token VARCHAR(64)"))
+            conn.commit()
+        print("[ensure_remember_token_column] ok")
+    except Exception as e:
+        print(f"[ensure_remember_token_column] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_remember_token_column()
+
+
+def _issue_remember_token(user):
+    """ユーザーに新しいremember_tokenを発行・保存して返す"""
+    from models import User as _U
+    token = secrets.token_urlsafe(32)[:64]
+    user.remember_token = token
+    db.session.commit()
+    return token
+
+
+def _set_remember_cookie(response, token):
+    response.set_cookie(
+        REMEMBER_COOKIE_NAME,
+        token,
+        max_age=REMEMBER_COOKIE_MAX_AGE,
+        httponly=True,
+        secure=not app.debug,
+        samesite="Lax",
+        path="/",
+    )
+    return response
+
+
+def _clear_remember_cookie(response):
+    response.set_cookie(
+        REMEMBER_COOKIE_NAME, "", max_age=0,
+        httponly=True, secure=not app.debug, samesite="Lax", path="/",
+    )
+    return response
+
+
+@app.before_request
+def _auto_login_from_remember_cookie():
+    """sessionにuser_idがなく、rt Cookieが有効ならsessionを自動復元"""
+    if session.get("user_id"):
+        return
+    token = request.cookies.get(REMEMBER_COOKIE_NAME)
+    if not token:
+        return
+    try:
+        from models import User as _U
+        user = _U.query.filter_by(remember_token=token).first()
+        if user:
+            session.permanent = True
+            session["user_id"] = user.id
+    except Exception as e:
+        print(f"[auto_login] skipped: {e}")
 
 
 # ============================================
@@ -521,7 +598,9 @@ def register():
         session["user_id"] = user.id
         _process_pending_seminar(user)
         flash("登録が完了しました！セミナー資料をライブラリに追加しました。", "success")
-        return redirect(url_for("library"))
+        token = _issue_remember_token(user)
+        resp = redirect(url_for("library"))
+        return _set_remember_cookie(resp, token)
 
     return render_template("register.html", is_new=True)
 
@@ -547,13 +626,27 @@ def login():
     session["user_id"] = user.id
     _process_pending_seminar(user)
     flash(f"おかえりなさい、{user.name}さん！", "success")
-    return redirect(url_for("library"))
+    token = _issue_remember_token(user)
+    resp = redirect(url_for("library"))
+    return _set_remember_cookie(resp, token)
 
 
 @app.route("/logout")
 def logout():
+    # 現在のユーザーのremember_tokenを無効化
+    try:
+        uid = session.get("user_id")
+        if uid:
+            from models import User as _U
+            u = _U.query.get(uid)
+            if u:
+                u.remember_token = None
+                db.session.commit()
+    except Exception as e:
+        print(f"[logout] token clear skipped: {e}")
     session.clear()
-    return redirect(url_for("landing"))
+    resp = redirect(url_for("landing"))
+    return _clear_remember_cookie(resp)
 
 
 def _process_pending_seminar(user):
