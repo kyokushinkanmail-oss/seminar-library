@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>組手セミナー レポート | 極真館</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Shippori+Mincho:wght@500;700;900&family=BIZ+UDPMincho&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #2d2d2d;
+    --paper: #f5ede0;
+    --paper-warm: #ebe0c5;
+    --washi: #f8f1e0;
+    --crimson: #a8201a;
+    --crimson-deep: #7a1612;
+    --gold: #a6830e;
+    --gold-pale: #c9a227;
+    --bamboo: #3d5a40;
+    --stamp-red: #c62828;
+    --gray-line: #d0c7b5;
+  }
+  
+  html { scroll-behavior: smooth; }
+  
+  body {
+    font-family: 'BIZ UDPMincho', 'Noto Serif JP', serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.9;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(168, 32, 26, 0.04) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 90%, rgba(166, 131, 14, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+  
+  /* 和紙テクスチャ（軽めのノイズ） */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* ========== ヘッダー ========== */
+  .hero {
+    position: relative;
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--gray-line);
+    margin-bottom: 60px;
+  }
+  
+  .hero::before {
+    content: '極';
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(200px, 35vw, 400px);
+    color: var(--crimson);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .hero-tag {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 11px;
+    letter-spacing: 10px;
+    color: var(--crimson);
+    border-top: 1px solid var(--crimson);
+    border-bottom: 1px solid var(--crimson);
+    display: inline-block;
+    padding: 6px 20px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero h1 .accent {
+    color: var(--crimson);
+  }
+  
+  .hero-subtitle {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(14px, 2vw, 17px);
+    color: var(--ink-soft);
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-meta {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-meta span {
+    padding-right: 30px;
+    border-right: 1px solid var(--gray-line);
+  }
+  .hero-meta span:last-child { border: none; }
+  .hero-meta strong {
+    color: var(--crimson);
+    font-weight: 700;
+  }
+  
+  /* 朱印スタンプ */
+  .stamp {
+    position: absolute;
+    top: 100px;
+    right: 40px;
+    width: 90px;
+    height: 90px;
+    border: 4px double var(--stamp-red);
+    background: rgba(198, 40, 40, 0.08);
+    transform: rotate(-8deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    color: var(--stamp-red);
+    font-size: 13px;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    opacity: 0.9;
+    z-index: 3;
+  }
+  
+  /* ========== 目次 ========== */
+  .toc {
+    background: var(--washi);
+    border: 1px solid var(--gray-line);
+    border-left: 4px solid var(--crimson);
+    padding: 28px 32px;
+    margin-bottom: 60px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.03);
+  }
+  
+  .toc-title {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--crimson);
+    margin-bottom: 16px;
+    letter-spacing: 3px;
+    border-bottom: 1px dashed var(--gray-line);
+    padding-bottom: 10px;
+  }
+  
+  .toc ol {
+    list-style: none;
+    column-count: 2;
+    column-gap: 30px;
+  }
+  
+  @media (max-width: 600px) {
+    .toc ol { column-count: 1; }
+  }
+  
+  .toc li {
+    font-size: 13px;
+    margin-bottom: 8px;
+    break-inside: avoid;
+  }
+  
+  .toc li a {
+    color: var(--ink);
+    text-decoration: none;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    transition: color 0.2s;
+  }
+  
+  .toc li a:hover {
+    color: var(--crimson);
+  }
+  
+  .toc li .num {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    color: var(--crimson);
+    font-size: 11px;
+    min-width: 22px;
+  }
+  
+  /* ========== セクション ========== */
+  .section {
+    margin-bottom: 60px;
+    position: relative;
+  }
+  
+  .section-number {
+    position: absolute;
+    top: -10px;
+    left: -8px;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 120px;
+    color: var(--crimson);
+    opacity: 0.08;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .section h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(22px, 3.5vw, 30px);
+    color: var(--ink);
+    padding: 12px 0 12px 20px;
+    margin-bottom: 24px;
+    border-left: 5px solid var(--crimson);
+    position: relative;
+    z-index: 2;
+    letter-spacing: 1px;
+  }
+  
+  .section h2 .chapter-mark {
+    font-size: 0.55em;
+    color: var(--crimson);
+    font-weight: 700;
+    margin-right: 12px;
+    letter-spacing: 3px;
+  }
+  
+  .section h3 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 19px;
+    color: var(--crimson-deep);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--gold-pale);
+    letter-spacing: 0.5px;
+  }
+  
+  .section p {
+    margin-bottom: 16px;
+    color: var(--ink-soft);
+  }
+  
+  .section strong {
+    color: var(--crimson);
+    font-weight: 700;
+    background: linear-gradient(transparent 65%, rgba(168, 32, 26, 0.12) 65%);
+    padding: 0 2px;
+  }
+  
+  .section ul, .section ol {
+    margin: 14px 0 20px 24px;
+  }
+  
+  .section li {
+    margin-bottom: 8px;
+    color: var(--ink-soft);
+  }
+  
+  .section ul li::marker {
+    color: var(--crimson);
+  }
+  
+  /* ========== ポイントボックス ========== */
+  .point-box {
+    background: linear-gradient(135deg, var(--washi) 0%, var(--paper-warm) 100%);
+    border: 1px solid var(--gold-pale);
+    padding: 22px 26px;
+    margin: 24px 0;
+    position: relative;
+    box-shadow: 3px 3px 0 rgba(166, 131, 14, 0.15);
+  }
+  
+  .point-box::before {
+    content: '要点';
+    position: absolute;
+    top: -12px;
+    left: 16px;
+    background: var(--crimson);
+    color: var(--paper);
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 3px 14px;
+    letter-spacing: 3px;
+  }
+  
+  .point-box p:last-child { margin-bottom: 0; }
+  
+  /* 注意ボックス */
+  .warning-box {
+    background: rgba(168, 32, 26, 0.06);
+    border: 1px solid var(--crimson);
+    border-left-width: 5px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    position: relative;
+  }
+  
+  .warning-box::before {
+    content: '⚠';
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 24px;
+    color: var(--crimson);
+  }
+  
+  .warning-box .label {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    color: var(--crimson);
+    font-size: 14px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  
+  /* 引用ボックス */
+  .quote-box {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink);
+    padding: 20px 30px;
+    margin: 24px 0;
+    border-top: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    text-align: center;
+    position: relative;
+    background: linear-gradient(180deg, transparent 0%, rgba(166, 131, 14, 0.04) 50%, transparent 100%);
+  }
+  
+  .quote-box::before,
+  .quote-box::after {
+    font-size: 32px;
+    color: var(--gold);
+    line-height: 0;
+  }
+  .quote-box::before { content: '「'; }
+  .quote-box::after { content: '」'; }
+  
+  /* ========== 図解 ========== */
+  .diagram {
+    margin: 30px 0;
+    padding: 24px;
+    background: var(--washi);
+    border: 1px solid var(--gray-line);
+    position: relative;
+  }
+  
+  .diagram-title {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--crimson);
+    margin-bottom: 16px;
+    text-align: center;
+    letter-spacing: 3px;
+  }
+  
+  .diagram-title::before,
+  .diagram-title::after {
+    content: '※';
+    margin: 0 8px;
+    opacity: 0.5;
+  }
+  
+  .diagram svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+  
+  .diagram-caption {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 12px;
+    font-style: italic;
+  }
+  
+  /* ========== テーブル ========== */
+  .pro-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 13px;
+    background: var(--washi);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.04);
+  }
+  
+  .pro-table th {
+    background: var(--crimson);
+    color: var(--paper);
+    padding: 12px 16px;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    text-align: left;
+    letter-spacing: 2px;
+    font-size: 13px;
+  }
+  
+  .pro-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-line);
+    vertical-align: top;
+  }
+  
+  .pro-table tr:last-child td { border-bottom: none; }
+  
+  .pro-table tr:nth-child(even) td {
+    background: rgba(255,255,255,0.4);
+  }
+  
+  /* ========== タイムライン ========== */
+  .timeline {
+    margin: 30px 0;
+    position: relative;
+    padding-left: 30px;
+  }
+  
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--crimson);
+  }
+  
+  .timeline-item {
+    position: relative;
+    margin-bottom: 22px;
+  }
+  
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -27px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--paper);
+    border: 3px solid var(--crimson);
+    border-radius: 50%;
+  }
+  
+  .timeline-time {
+    display: inline-block;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--crimson);
+    background: var(--paper-warm);
+    padding: 3px 12px;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+  
+  .timeline-content {
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  
+  /* ========== 補足セクション ========== */
+  .appendix {
+    margin-top: 80px;
+    padding: 40px 0;
+    border-top: 3px double var(--gold);
+    border-bottom: 3px double var(--gold);
+    background: linear-gradient(180deg, transparent 0%, rgba(166, 131, 14, 0.04) 50%, transparent 100%);
+  }
+  
+  .appendix h2 {
+    text-align: center;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(24px, 4vw, 32px);
+    color: var(--gold);
+    margin-bottom: 8px;
+    letter-spacing: 8px;
+    border: none;
+    padding: 0;
+  }
+  
+  .appendix .appendix-sub {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+  }
+  
+  .appendix-item {
+    margin-bottom: 28px;
+    padding: 20px 24px;
+    background: var(--washi);
+    border-left: 4px solid var(--gold);
+    position: relative;
+  }
+  
+  .appendix-item h3 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .appendix-item h3::before {
+    content: '※';
+    color: var(--gold);
+    font-size: 20px;
+  }
+  
+  .appendix-item .keyword {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    padding: 3px 12px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin: 4px 4px 4px 0;
+  }
+  
+  .appendix-item p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  
+  /* ========== フッター ========== */
+  footer {
+    margin-top: 80px;
+    padding: 40px 0;
+    text-align: center;
+    border-top: 1px solid var(--gray-line);
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+  }
+  
+  footer .final-kanji {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 64px;
+    color: var(--crimson);
+    letter-spacing: 16px;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+  
+  /* 本文の段落開始のアクセント */
+  .section > p:first-of-type::first-letter {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 1.4em;
+    color: var(--crimson);
+  }
+  
+  /* 印刷対応 */
+  @media print {
+    body { background: white; }
+    .section { break-inside: avoid; }
+    .toc { break-after: page; }
+  }
+  
+  /* 目次の項目番号調整 */
+  @media (max-width: 768px) {
+    .section-number { font-size: 80px; opacity: 0.06; }
+    .stamp { top: 40px; right: 20px; width: 70px; height: 70px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<a href="/" style="position:fixed;top:14px;left:14px;z-index:99;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(26,26,26,0.85);color:#f5ede0;text-decoration:none;border-radius:24px;font-family:'Noto Serif JP',serif;font-size:13px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.2);">← セミナーライブラリ</a>
+
+<div class="container">
+
+<!-- ========== ヘッダー ========== -->
+<header class="hero">
+  <div class="stamp">
+    極真館<br>組手の巻
+  </div>
+  <div class="hero-tag">組 手 セ ミ ナ ー</div>
+  <h1>組手<span class="accent">指南</span>録</h1>
+  <div class="hero-subtitle">技 ・ 心 ・ 体 の 統 合</div>
+  <div class="hero-meta">
+    <span>主題：<strong>試合に勝つための組手技術と心構え</strong></span>
+    <span>対象：<strong>選手・指導者・ご父兄</strong></span>
+    <span>形式：<strong>質疑応答セミナー</strong></span>
+  </div>
+</header>
+
+<!-- ========== 目次 ========== -->
+<nav class="toc">
+  <div class="toc-title">目　次</div>
+  <ol>
+    <li><a href="#s1"><span class="num">一</span>上段の受けと構え</a></li>
+    <li><a href="#s2"><span class="num">二</span>腰の落とし方と足幅</a></li>
+    <li><a href="#s3"><span class="num">三</span>試合前のアップ法</a></li>
+    <li><a href="#s4"><span class="num">四</span>試合日の食事戦略</a></li>
+    <li><a href="#s5"><span class="num">五</span>距離を詰める思考（詰将棋）</a></li>
+    <li><a href="#s6"><span class="num">六</span>トーナメント中のアップ</a></li>
+    <li><a href="#s7"><span class="num">七</span>無換気トレーニング</a></li>
+    <li><a href="#s8"><span class="num">八</span>スロースターター克服法</a></li>
+    <li><a href="#s9"><span class="num">九</span>ビハインドを取り返す思考</a></li>
+    <li><a href="#s10"><span class="num">十</span>セコンド論</a></li>
+    <li><a href="#s11"><span class="num">十一</span>体作りと栄養</a></li>
+    <li><a href="#s12"><span class="num">十二</span>怪我の対処法</a></li>
+    <li><a href="#s13"><span class="num">十三</span>試合前の調整</a></li>
+    <li><a href="#s14"><span class="num">十四</span>判定への向き合い方</a></li>
+  </ol>
+</nav>
+
+<!-- ========== 本文 ========== -->
+
+<!-- セクション1：上段の受け -->
+<section class="section" id="s1">
+  <div class="section-number">一</div>
+  <h2><span class="chapter-mark">第一章</span>上段の受けと構え</h2>
+  
+  <p>上段を打たれやすい選手の多くは、<strong>正面向きになりすぎている</strong>ことが原因となっている。相手と正対した状態では、左右どちらからの攻撃にも対応が遅れ、連続で打たれる展開に陥りやすい。</p>
+  
+  <h3>角度をつけた構えの重要性</h3>
+  
+  <p>上半身に角度をつけることで、受けの効率が劇的に変わる。特に<strong>右側からの攻撃は引きで崩されることがほぼなく、まっすぐの左も対応可能</strong>。問題となるのは回し系の左攻撃だが、ここでセルフで角度をつけることで対処できる。</p>
+  
+  <div class="diagram">
+    <div class="diagram-title">正面構えと斜め構えの比較</div>
+    <svg viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- 左：正面構え（NG） -->
+      <g>
+        <text x="100" y="30" text-anchor="middle" font-family="'Shippori Mincho', serif" font-size="14" font-weight="700" fill="#a8201a">正面構え（危険）</text>
+        <!-- 相手 -->
+        <circle cx="100" cy="70" r="15" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="85" y="85" width="30" height="40" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+        <text x="100" y="140" text-anchor="middle" font-size="10" fill="#666">相手</text>
+        <!-- 自分 -->
+        <circle cx="100" cy="200" r="15" fill="none" stroke="#a8201a" stroke-width="2.5"/>
+        <rect x="85" y="215" width="30" height="30" fill="none" stroke="#a8201a" stroke-width="2.5"/>
+        <text x="100" y="258" text-anchor="middle" font-size="10" fill="#a8201a">自分</text>
+        <!-- 攻撃矢印（両側） -->
+        <path d="M 75 95 Q 50 130 75 185" stroke="#a8201a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+        <path d="M 125 95 Q 150 130 125 185" stroke="#a8201a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+        <text x="40" y="155" font-size="11" fill="#a8201a">左</text>
+        <text x="155" y="155" font-size="11" fill="#a8201a">右</text>
+        <text x="100" y="175" text-anchor="middle" font-size="10" fill="#a8201a">両方直撃</text>
+      </g>
+      
+      <!-- 区切り -->
+      <line x1="300" y1="30" x2="300" y2="250" stroke="#d0c7b5" stroke-width="1" stroke-dasharray="4,4"/>
+      
+      <!-- 右：斜め構え（OK） -->
+      <g>
+        <text x="450" y="30" text-anchor="middle" font-family="'Shippori Mincho', serif" font-size="14" font-weight="700" fill="#3d5a40">斜め構え（推奨）</text>
+        <!-- 相手 -->
+        <circle cx="450" cy="70" r="15" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="435" y="85" width="30" height="40" fill="none" stroke="#1a1a1a" stroke-width="2"/>
+        <text x="450" y="140" text-anchor="middle" font-size="10" fill="#666">相手</text>
+        <!-- 自分（斜め） -->
+        <circle cx="450" cy="200" r="15" fill="none" stroke="#3d5a40" stroke-width="2.5"/>
+        <g transform="rotate(-25, 450, 230)">
+          <rect x="435" y="215" width="30" height="30" fill="none" stroke="#3d5a40" stroke-width="2.5"/>
+        </g>
+        <text x="450" y="258" text-anchor="middle" font-size="10" fill="#3d5a40">自分</text>
+        <!-- 攻撃（弾かれる） -->
+        <path d="M 425 95 Q 400 130 410 160" stroke="#3d5a40" stroke-width="2" fill="none" stroke-dasharray="3,3" marker-end="url(#arrow-green)"/>
+        <path d="M 475 95 Q 500 130 490 160" stroke="#3d5a40" stroke-width="2" fill="none" stroke-dasharray="3,3" marker-end="url(#arrow-green)"/>
+        <text x="450" y="175" text-anchor="middle" font-size="10" fill="#3d5a40">弾かれる</text>
+      </g>
+      
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#a8201a"/>
+        </marker>
+        <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#3d5a40"/>
+        </marker>
+      </defs>
+    </svg>
+    <div class="diagram-caption">正面に立つと両側から直撃を受けるが、斜めに構えることで攻撃が流れる</div>
+  </div>
+  
+  <div class="point-box">
+    <p>まっすぐ相手に向かず、<strong>体に角度をつける</strong>ことで、右引きは封じられ、左もセルフで角度を作れば下げられることはまずない。</p>
+  </div>
+</section>
+
+<!-- セクション2：腰の落とし方 -->
+<section class="section" id="s2">
+  <div class="section-number">二</div>
+  <h2><span class="chapter-mark">第二章</span>腰の落とし方と足幅</h2>
+  
+  <p>基本は8型が立っているところからスタートするが、よく<strong>「腰を落とせ」</strong>と言われる場面で、落とし方を間違えるとかえって殴られやすくなる。下がりたくないからと腰を押し下げすぎると、ただくっついた状態になり、より殴られる展開になってしまう。</p>
+  
+  <h3>足の形について</h3>
+  
+  <p>足が<strong>平行になってしまうと動きが悪くなる</strong>。どちらかの足を一歩アウトさせることで、動ける可動域が広がる。前後への動きも調整しやすくなる。</p>
+  
+  <div class="diagram">
+    <div class="diagram-title">腰の落とし方・足の配置</div>
+    <svg viewBox="0 0 600 240" xmlns="http://www.w3.org/2000/svg">
+      <!-- NG例 -->
+      <g>
+        <text x="100" y="30" text-anchor="middle" font-family="'Shippori Mincho', serif" font-size="13" font-weight="700" fill="#a8201a">× 腰を落としすぎ</text>
+        <!-- 人型 -->
+        <circle cx="100" cy="65" r="13" fill="none" stroke="#a8201a" stroke-width="2"/>
+        <path d="M 100 78 L 100 140" stroke="#a8201a" stroke-width="2"/>
+        <!-- 折れた膝 -->
+        <path d="M 100 120 L 80 170 L 70 200" stroke="#a8201a" stroke-width="2.5" fill="none"/>
+        <path d="M 100 120 L 120 170 L 130 200" stroke="#a8201a" stroke-width="2.5" fill="none"/>
+        <!-- 足（平行） -->
+        <ellipse cx="70" cy="203" rx="12" ry="4" fill="#a8201a"/>
+        <ellipse cx="130" cy="203" rx="12" ry="4" fill="#a8201a"/>
+        <text x="100" y="230" text-anchor="middle" font-size="11" fill="#a8201a">動けず殴られる</text>
+      </g>
+      
+      <!-- 中央：良い例 -->
+      <g>
+        <text x="300" y="30" text-anchor="middle" font-family="'Shippori Mincho', serif" font-size="13" font-weight="700" fill="#3d5a40">○ 適度な沈み+アウト</text>
+        <circle cx="300" cy="65" r="13" fill="none" stroke="#3d5a40" stroke-width="2.5"/>
+        <path d="M 300 78 L 300 130" stroke="#3d5a40" stroke-width="2.5"/>
+        <!-- 膝 -->
+        <path d="M 300 115 L 275 165 L 265 200" stroke="#3d5a40" stroke-width="2.5" fill="none"/>
+        <path d="M 300 115 L 325 165 L 340 200" stroke="#3d5a40" stroke-width="2.5" fill="none"/>
+        <!-- 足（前後にずれる=アウト） -->
+        <ellipse cx="265" cy="203" rx="15" ry="5" fill="#3d5a40"/>
+        <ellipse cx="340" cy="215" rx="15" ry="5" fill="#3d5a40"/>
+        <text x="300" y="235" text-anchor="middle" font-size="11" fill="#3d5a40">可動域確保</text>
+      </g>
+      
+      <!-- 右：足の配置だけ -->
+      <g>
+        <text x="500" y="30" text-anchor="middle" font-family="'Shippori Mincho', serif" font-size="13" font-weight="700" fill="#a6830e">足の配置</text>
+        <!-- 床を表す線 -->
+        <line x1="440" y1="150" x2="560" y2="150" stroke="#d0c7b5" stroke-width="1"/>
+        <!-- NG：平行 -->
+        <ellipse cx="465" cy="90" rx="12" ry="4" fill="#a8201a"/>
+        <ellipse cx="495" cy="90" rx="12" ry="4" fill="#a8201a"/>
+        <text x="480" y="70" text-anchor="middle" font-size="10" fill="#a8201a">×平行</text>
+        <!-- OK：アウト -->
+        <ellipse cx="465" cy="180" rx="12" ry="4" fill="#3d5a40"/>
+        <ellipse cx="505" cy="200" rx="12" ry="4" fill="#3d5a40"/>
+        <text x="485" y="225" text-anchor="middle" font-size="10" fill="#3d5a40">○アウト</text>
+      </g>
+    </svg>
+    <div class="diagram-caption">腰は「落とすだけ」でなく「動ける範囲で沈む」が正解。足は平行を避け前後にずらす。</div>
+  </div>
+  
+  <div class="point-box">
+    <p>腰を落とすことで安定感は増すが、<strong>押しすぎて密着すると逆効果</strong>。下がるより一緒に下がる（共に動ける）方が良い。両方の足を平行にせず、一歩アウトしておくことで動きの幅が確保できる。</p>
+  </div>
+</section>
+
+<!-- セクション3：試合前のアップ -->
+<section class="section" id="s3">
+  <div class="section-number">三</div>
+  <h2><span class="chapter-mark">第三章</span>試合前のアップ法</h2>
+  
+  <p>試合前のアップには<strong>「心拍を上げる」「神経に刺激を入れる」</strong>という2つの重要な要素がある。単に汗をかけばいいわけではなく、体系的に組み立てる必要がある。</p>
+  
+  <h3>タイムスケジュール</h3>
+  
+  <div class="timeline">
+    <div class="timeline-item">
+      <span class="timeline-time">試合 1時間〜1時間半前</span>
+      <div class="timeline-content">
+        <strong>心拍を上げる長めのアップ。</strong>試合時間（3分）を想定した本格的な動きを1回行う。自分の限界値を1回全力で引き出すイメージ。
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-time">試合 30分前</span>
+      <div class="timeline-content">
+        短い時間（1分〜2分）で<strong>再度心拍を上げる</strong>。
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-time">試合 直前</span>
+      <div class="timeline-content">
+        <strong>20秒程度の短時間で心拍をラップ（一気に上げる）。</strong>試合開始時に最適な心拍状態を作る。
+      </div>
+    </div>
+  </div>
+  
+  <h3>神経への刺激が不可欠</h3>
+  
+  <p>もも上げやシャドーだけでは不十分。<strong>自分がやりたい技（上段回し蹴り等）</strong>をちゃんと刺激として体に入れておかないと、いきなり本番で使おうとしても体が動かない。練習してきた動きを最後にしっかり確認することが絶対に必要。</p>
+  
+  <div class="warning-box">
+    <div class="label">よくある失敗</div>
+    <p>試合当日だけ急に長いアップをする選手が多い。普段シャドーだけの人がいきなりビッグミットを使うと、刺激が過剰で試合本番に変な疲労が残る。<strong>アップも練習の延長線上にある</strong>ため、日頃からアップのメニューを決めて練習しておくこと。</p>
+  </div>
+  
+  <div class="quote-box">練習の延長線上にしかないアップ。普段しないことを当日やるな。</div>
+</section>
+
+<!-- セクション4：試合当日の食事 -->
+<section class="section" id="s4">
+  <div class="section-number">四</div>
+  <h2><span class="chapter-mark">第四章</span>試合日の食事戦略</h2>
+  
+  <h3>前日の食事</h3>
+  
+  <p>基本は<strong>炭水化物を摂っておけば何でもOK</strong>。うどん、パスタなどが推奨される。これらは体を動かすエネルギー源となる。</p>
+  
+  <ul>
+    <li>脂っこいものは避ける</li>
+    <li>お腹いっぱいにしない</li>
+    <li><strong>寝る2時間前までに食べ終わる</strong>（消化と睡眠の質のため）</li>
+    <li>タンパク質も適量摂る（アミノ酸が必要）。ただし人によっては消化に時間がかかるので、残りすぎない量に</li>
+  </ul>
+  
+  <h3>試合当日の朝</h3>
+  
+  <p><strong>おにぎり1個程度</strong>で十分。1〜2時間で分解できるものを会場行くまでに入れる。サプリメント派であれば、炭水化物を粉末で摂る方法もある。</p>
+  
+  <div class="point-box">
+    <p>会場では<strong>バナナやゼリー</strong>など消化にいいものを。エネルギーは粉末やゼリーから、<strong>お腹に内容物が残った状態で試合しない</strong>ことが重要。</p>
+  </div>
+  
+  <h3>エネルギー補給のアイテム</h3>
+  
+  <table class="pro-table">
+    <tr><th>アイテム</th><th>特徴</th><th>使い方</th></tr>
+    <tr><td>おにぎり</td><td>朝の炭水化物源</td><td>試合当日の朝に1個</td></tr>
+    <tr><td>バナナ</td><td>消化が早い</td><td>会場での補給</td></tr>
+    <tr><td>エネルギーゼリー</td><td>すぐ吸収</td><td>試合直前の補給</td></tr>
+    <tr><td>粉末炭水化物（マルトデキストリン等）</td><td>水に溶かして飲む</td><td>当日の水分兼エネルギー</td></tr>
+  </table>
+  
+  <div class="quote-box">一番の徹底策は、前日の食事をとった上で試合と同じぐらい動く練習をしてみること。</div>
+</section>
+
+<!-- セクション5：距離を詰める思考 -->
+<section class="section" id="s5">
+  <div class="section-number">五</div>
+  <h2><span class="chapter-mark">第五章</span>距離を詰める思考（詰将棋）</h2>
+  
+  <p>距離を取って逃げ続ける相手への攻め方について。一発目でいきなりホームランを狙うのは得策ではない。</p>
+  
+  <h3>考え方の一歩目：触るだけでOK</h3>
+  
+  <p>一発目は<strong>フェイントでも構わない、なんなら「ちょっと触る」だけでもいい</strong>。2発目をしっかり当てるという考え方に切り替える。これで入り方のバリエーションが増える。</p>
+  
+  <h3>試合場のサイズを活用する（詰将棋）</h3>
+  
+  <p>試合場は7m×7m程度の正方形。端まで追い詰めた時の動き方が重要。</p>
+  
+  <div class="diagram">
+    <div class="diagram-title">場外際の詰め方</div>
+    <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg">
+      <!-- 試合場 -->
+      <rect x="50" y="50" width="500" height="250" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+      <text x="300" y="40" text-anchor="middle" font-size="12" fill="#666">試合場（7m四方）</text>
+      
+      <!-- 相手（端っこに追い詰められた） -->
+      <circle cx="520" cy="175" r="18" fill="#f5ede0" stroke="#a8201a" stroke-width="3"/>
+      <text x="520" y="180" text-anchor="middle" font-size="12" font-weight="700" fill="#a8201a">敵</text>
+      <text x="520" y="205" text-anchor="middle" font-size="10" fill="#a8201a">端っこ</text>
+      
+      <!-- 逃げ道（相手の選択肢） -->
+      <path d="M 502 170 Q 460 100 410 80" stroke="#666" stroke-width="2" stroke-dasharray="4,4" fill="none" marker-end="url(#arrow-gray)"/>
+      <path d="M 502 180 Q 460 250 410 270" stroke="#666" stroke-width="2" stroke-dasharray="4,4" fill="none" marker-end="url(#arrow-gray)"/>
+      <text x="430" y="75" font-size="11" fill="#666">逃げ道①</text>
+      <text x="430" y="285" font-size="11" fill="#666">逃げ道②</text>
+      
+      <!-- 自分（正しいポジション） -->
+      <circle cx="430" cy="175" r="18" fill="#f5ede0" stroke="#3d5a40" stroke-width="3"/>
+      <text x="430" y="180" text-anchor="middle" font-size="12" font-weight="700" fill="#3d5a40">自</text>
+      
+      <!-- 塞ぎ方 -->
+      <path d="M 430 157 Q 430 120 430 100" stroke="#3d5a40" stroke-width="2.5" fill="none"/>
+      <path d="M 430 193 Q 430 230 430 250" stroke="#3d5a40" stroke-width="2.5" fill="none"/>
+      
+      <!-- 相手が逃げようとするとき、横スライド -->
+      <g transform="translate(200, 80)">
+        <text x="0" y="0" font-family="'Shippori Mincho', serif" font-size="13" font-weight="700" fill="#3d5a40">○ 相手が上に逃げる→自分も上にスライド</text>
+        <text x="0" y="20" font-family="'Shippori Mincho', serif" font-size="13" font-weight="700" fill="#3d5a40">○ 相手が下に逃げる→自分も下にスライド</text>
+        <text x="0" y="40" font-family="'Shippori Mincho', serif" font-size="13" font-weight="700" fill="#a8201a">× 追いかけるだけ→横に回り込まれる</text>
+      </g>
+      
+      <!-- コーナー追い込み -->
+      <text x="300" y="315" text-anchor="middle" font-size="11" fill="#a8201a">→ コーナーに追い込めば選択肢が3択→2択→1択に減る</text>
+      
+      <defs>
+        <marker id="arrow-gray" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+        </marker>
+      </defs>
+    </svg>
+    <div class="diagram-caption">相手の逃げ場を「塞ぐ」のがポジショニング。追いかけではなく、横ずれに合わせる動き。</div>
+  </div>
+  
+  <div class="point-box">
+    <p>横に動くことには<strong>相手の逃げ場を塞ぐ効果</strong>がある。相手が右に回れば自分も右に、左に回れば自分も左にスライド。これを繰り返すと、相手の選択肢が消えていく。<strong>攻める側は「詰将棋」のように逃げ場を削っていく</strong>のが基本。</p>
+  </div>
+  
+  <div class="quote-box">一発目は触るだけ、二発目で決める。詰将棋の発想で戦え。</div>
+</section>
+
+<!-- セクション6：トーナメント中のアップ -->
+<section class="section" id="s6">
+  <div class="section-number">六</div>
+  <h2><span class="chapter-mark">第六章</span>トーナメント中のアップ</h2>
+  
+  <h3>試合間隔によって変える</h3>
+  
+  <table class="pro-table">
+    <tr><th>試合間隔</th><th>アップ内容</th></tr>
+    <tr><td>15〜30分</td><td>動きの再確認、体をほぐす程度</td></tr>
+    <tr><td>2〜3時間以上</td><td>当日最初のアップと同様にフルで行う（3分試合で息上げ）</td></tr>
+  </table>
+  
+  <h3>海外試合・時間差が大きい場合</h3>
+  
+  <p>海外では2日目になることもあり、運営上の変動は当然ある。<strong>試合番号から最短時間を予測</strong>する（番号 × 1試合あたりの時間で概算）。</p>
+  
+  <h3>勝ち上がった後の準備</h3>
+  
+  <ul>
+    <li><strong>同じトーナメント内の他選手の試合動画を撮って分析</strong></li>
+    <li>相手の癖を把握し、対応プランを脳内で整理</li>
+    <li>リハーサル（これをされたらこう返す、を全パターン想定）</li>
+    <li>心拍はアップで上げる、ただし疲労は抜く</li>
+  </ul>
+  
+  <div class="point-box">
+    <p>他選手より多く試合している状態で臨むのは不利。<strong>短時間で心拍を上げて、疲労は残さない</strong>状態を作るのが鍵。</p>
+  </div>
+</section>
+
+<!-- セクション7：無換気トレーニング -->
+<section class="section" id="s7">
+  <div class="section-number">七</div>
+  <h2><span class="chapter-mark">第七章</span>無換気トレーニング</h2>
+  
+  <p>試合合間など、短時間で心拍だけ上げたい場合の特殊なトレーニング法。<strong>無酸素・無換気（むかんき）で肺に刺激を入れる</strong>方法。</p>
+  
+  <h3>やり方</h3>
+  
+  <div class="diagram">
+    <div class="diagram-title">無換気トレーニングの手順</div>
+    <svg viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- ステップ -->
+      <g>
+        <rect x="30" y="40" width="130" height="90" fill="#f5ede0" stroke="#a8201a" stroke-width="2"/>
+        <text x="95" y="60" text-anchor="middle" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#a8201a">①息を吐き切る</text>
+        <text x="95" y="82" text-anchor="middle" font-size="11" fill="#1a1a1a">肺の中をゼロに</text>
+        <text x="95" y="100" text-anchor="middle" font-size="11" fill="#1a1a1a">する</text>
+        <text x="95" y="120" text-anchor="middle" font-size="10" fill="#666">〜吐きっぱ〜</text>
+      </g>
+      
+      <path d="M 170 85 L 200 85" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arrow-black)"/>
+      
+      <g>
+        <rect x="210" y="40" width="130" height="90" fill="#ebe0c5" stroke="#a8201a" stroke-width="2"/>
+        <text x="275" y="60" text-anchor="middle" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#a8201a">②5秒全力</text>
+        <text x="275" y="82" text-anchor="middle" font-size="11" fill="#1a1a1a">もも上げダッシュ</text>
+        <text x="275" y="100" text-anchor="middle" font-size="11" fill="#1a1a1a">腕・足大きく</text>
+        <text x="275" y="120" text-anchor="middle" font-size="10" fill="#a8201a">息止めたまま！</text>
+      </g>
+      
+      <path d="M 350 85 L 380 85" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arrow-black)"/>
+      
+      <g>
+        <rect x="390" y="40" width="130" height="90" fill="#f5ede0" stroke="#a8201a" stroke-width="2"/>
+        <text x="455" y="60" text-anchor="middle" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#a8201a">③5秒休憩</text>
+        <text x="455" y="82" text-anchor="middle" font-size="11" fill="#1a1a1a">短い呼吸を</text>
+        <text x="455" y="100" text-anchor="middle" font-size="11" fill="#1a1a1a">数回する程度</text>
+      </g>
+      
+      <!-- ループ矢印 -->
+      <path d="M 455 140 Q 455 180 275 200 Q 95 220 95 150" stroke="#a8201a" stroke-width="2.5" fill="none" stroke-dasharray="5,5" marker-end="url(#arrow-red)"/>
+      <text x="275" y="230" text-anchor="middle" font-family="'Shippori Mincho', serif" font-weight="700" font-size="13" fill="#a8201a">6回繰り返す（計1分）</text>
+      <text x="275" y="255" text-anchor="middle" font-size="11" fill="#666">※1分で心拍・肺に強烈な刺激</text>
+      
+      <defs>
+        <marker id="arrow-black" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#1a1a1a"/>
+        </marker>
+        <marker id="arrow-red" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#a8201a"/>
+        </marker>
+      </defs>
+    </svg>
+    <div class="diagram-caption">息を吐き切って全力で5秒動き、5秒休む。これを6回で約1分。試合合間の短時間アップに使える。</div>
+  </div>
+  
+  <h3>動作の例</h3>
+  
+  <ul>
+    <li><strong>もも上げダッシュ</strong>（最も基本）</li>
+    <li>全力シャドー</li>
+    <li>腕も足も大きく動かす</li>
+  </ul>
+  
+  <div class="warning-box">
+    <div class="label">注意</div>
+    <p>血圧が上がる危険性があるため、<strong>高血圧の方は避ける</strong>こと。試合って無呼吸の時間が多いので、その慣らしとしての意味合いもある。有酸素バージョン（呼吸しながら全力）も別途効果あり。</p>
+  </div>
+</section>
+
+<!-- セクション8：スロースターター -->
+<section class="section" id="s8">
+  <div class="section-number">八</div>
+  <h2><span class="chapter-mark">第八章</span>スロースターター克服法</h2>
+  
+  <p>試合開始からいきなり全力で動けない選手への対処法。結論として、<strong>性格的・生まれつきの部分が大きく、完全な克服は難しい</strong>。だが、戦略で補える。</p>
+  
+  <h3>戦略①：出鼻をくじく</h3>
+  
+  <p>ヨーイドンの瞬間、<strong>相手が嫌がることをいきなりする</strong>、または何もできない状況を作る。例えば、ヨーイドンで1回バックステップしてから左右に動く。相手のプランを初動で壊す。</p>
+  
+  <h3>戦略②：詰将棋に持ち込む</h3>
+  
+  <p>相手のペースで来させない。<strong>こっちの土俵に引き込む</strong>ことで、スロースターター側の不利を打ち消す。</p>
+  
+  <h3>戦略③：開始線の位置をずらす</h3>
+  
+  <p>開始線ギリギリに立たず、少し後ろに立つことで<strong>相手の距離感を狂わせる</strong>。（ルール上問題ない範囲で）</p>
+  
+  <div class="point-box">
+    <p>スロースターターの性格を<strong>事前に自覚しておく</strong>のが最も大事。試合中「体が動かない」と焦ると悪循環。「自分はスロースターターだから、こう対応しよう」と冷静に認識することで、焦りと体の硬直を防げる。</p>
+  </div>
+  
+  <div class="quote-box">いきなり行かれるなら、待つ必要はない。先に動いてしまえばいい。</div>
+</section>
+
+<!-- セクション9：ビハインド時の対処 -->
+<section class="section" id="s9">
+  <div class="section-number">九</div>
+  <h2><span class="chapter-mark">第九章</span>ビハインドを取り返す思考</h2>
+  
+  <h3>最初の2秒は「諦める」という発想</h3>
+  
+  <p>序盤で一気にやられた時、<strong>焦ってどうしようどうしようとループすると悪循環</strong>になる。そこで採用するのが「2秒の割り切り」。</p>
+  
+  <div class="diagram">
+    <div class="diagram-title">3秒戦略・2秒失ったら3秒取り返す</div>
+    <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg">
+      <!-- 180秒バー -->
+      <rect x="30" y="60" width="540" height="40" fill="#f5ede0" stroke="#1a1a1a" stroke-width="2"/>
+      <text x="300" y="50" text-anchor="middle" font-family="'Shippori Mincho', serif" font-weight="700" font-size="13" fill="#1a1a1a">試合 = 180秒</text>
+      
+      <!-- 2秒取られた部分 -->
+      <rect x="30" y="60" width="6" height="40" fill="#a8201a"/>
+      <text x="36" y="115" font-size="10" fill="#a8201a">2秒失</text>
+      
+      <!-- 残り時間 -->
+      <text x="300" y="85" text-anchor="middle" font-size="11" fill="#3d5a40">まだ178秒ある</text>
+      
+      <!-- 思考フロー -->
+      <g transform="translate(0, 140)">
+        <rect x="30" y="10" width="160" height="50" fill="#ebe0c5" stroke="#a8201a" stroke-width="2"/>
+        <text x="110" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#a8201a">2秒 取られた</text>
+        <text x="110" y="48" text-anchor="middle" font-size="10" fill="#1a1a1a">焦らない・諦める</text>
+        
+        <path d="M 200 35 L 230 35" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arrow-black2)"/>
+        
+        <rect x="240" y="10" width="160" height="50" fill="#ebe0c5" stroke="#a6830e" stroke-width="2"/>
+        <text x="320" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#a6830e">2秒で整える</text>
+        <text x="320" y="48" text-anchor="middle" font-size="10" fill="#1a1a1a">セコンドの声・停止</text>
+        
+        <path d="M 410 35 L 440 35" stroke="#1a1a1a" stroke-width="2" marker-end="url(#arrow-black2)"/>
+        
+        <rect x="450" y="10" width="130" height="50" fill="#ebe0c5" stroke="#3d5a40" stroke-width="2"/>
+        <text x="515" y="30" text-anchor="middle" font-size="12" font-weight="700" fill="#3d5a40">3秒取り返す</text>
+        <text x="515" y="48" text-anchor="middle" font-size="10" fill="#1a1a1a">コツコツ積み上げ</text>
+      </g>
+      
+      <defs>
+        <marker id="arrow-black2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#1a1a1a"/>
+        </marker>
+      </defs>
+    </svg>
+    <div class="diagram-caption">焦るとさらに2秒、3秒と失っていく。いったん諦めて冷静さを取り戻し、次の3秒で取り返す思考。</div>
+  </div>
+  
+  <h3>取られた2秒でやるべき3つのこと</h3>
+  
+  <ol>
+    <li><strong>この2秒で3秒巻き返す方法を考える</strong></li>
+    <li><strong>セコンドの声を聞く</strong></li>
+    <li><strong>完全に停止する（止まる）</strong></li>
+  </ol>
+  
+  <p>3秒取れれば、時間にして「2秒失う→3秒取る」で差分+1秒ずつ積み上がる。これを永久に繰り返せれば勝ちに繋がる。</p>
+  
+  <div class="quote-box">格闘技は野球と同じ。毎回ホームランは出ない。ヒットの延長線上に三振と本塁打がある。</div>
+  
+  <div class="point-box">
+    <p>焦りの最大の害は<strong>思考停止</strong>。「やられてる」という事実認識と「どう立て直すか」の思考を切り分け、常に<strong>次の一手を考え続ける</strong>こと。</p>
+  </div>
+</section>
+
+<!-- セクション10：セコンド論 -->
+<section class="section" id="s10">
+  <div class="section-number">十</div>
+  <h2><span class="chapter-mark">第十章</span>セコンド論</h2>
+  
+  <p>セコンドは単なる応援係ではなく、<strong>試合の結果を左右する戦略パートナー</strong>。正しい知識と経験がないと、むしろマイナスになる。</p>
+  
+  <h3>良いセコンドの条件</h3>
+  
+  <ul>
+    <li>空手の知識がある</li>
+    <li>試合の流れを読める</li>
+    <li>選手の得意・不得意を把握している</li>
+    <li>状況判断ができる</li>
+  </ul>
+  
+  <h3>避けるべき指示</h3>
+  
+  <table class="pro-table">
+    <tr><th>NGパターン</th><th>なぜダメか</th><th>代替案</th></tr>
+    <tr><td>「行け！行け！」</td><td>具体性ゼロ。本人も行けないから困っている</td><td>「右から回って」「左スイッチして」など方向を示す</td></tr>
+    <tr><td>「あの時の動きを見せてやれ！」</td><td>本人がどの場面か特定できない</td><td>具体的な技名やシチュエーションで指示</td></tr>
+    <tr><td>セコンド多すぎ問題</td><td>複数人から違う指示が飛び、本人が混乱</td><td>指示役を1人に絞る</td></tr>
+    <tr><td>手順飛ばし</td><td>いきなり本命の技を指示しても当たらない</td><td>ポジション→下準備→本命の順で</td></tr>
+    <tr><td>相手への文句（「ガード下げるな」等）</td><td>審判にマイナス印象を与える</td><td>自分の選手への前向き指示に変換</td></tr>
+  </table>
+  
+  <h3>理想的な指示の組み立て（ABCD展開）</h3>
+  
+  <div class="diagram">
+    <div class="diagram-title">セコンド指示のレイヤー構造</div>
+    <svg viewBox="0 0 600 260" xmlns="http://www.w3.org/2000/svg">
+      <!-- レイヤー -->
+      <g>
+        <rect x="50" y="30" width="500" height="40" fill="#a8201a" opacity="0.1" stroke="#a8201a" stroke-width="2"/>
+        <text x="70" y="55" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#a8201a">①ポジション指示</text>
+        <text x="270" y="55" font-size="12" fill="#1a1a1a">「右に回って」「左行って」（方向だけ）</text>
+      </g>
+      
+      <g>
+        <rect x="50" y="80" width="500" height="40" fill="#a6830e" opacity="0.1" stroke="#a6830e" stroke-width="2"/>
+        <text x="70" y="105" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#a6830e">②下準備（A）</text>
+        <text x="270" y="105" font-size="12" fill="#1a1a1a">「フェイント入れて」「出入りして」など</text>
+      </g>
+      
+      <g>
+        <rect x="50" y="130" width="500" height="40" fill="#a6830e" opacity="0.15" stroke="#a6830e" stroke-width="2"/>
+        <text x="70" y="155" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#a6830e">③布石（B・C）</text>
+        <text x="270" y="155" font-size="12" fill="#1a1a1a">「ジャブ」「ローで崩す」など準備技</text>
+      </g>
+      
+      <g>
+        <rect x="50" y="180" width="500" height="40" fill="#3d5a40" opacity="0.15" stroke="#3d5a40" stroke-width="2"/>
+        <text x="70" y="205" font-family="'Shippori Mincho', serif" font-weight="700" font-size="14" fill="#3d5a40">④本命（D）</text>
+        <text x="270" y="205" font-size="12" fill="#1a1a1a">「上段！」「下段！」など決め技</text>
+      </g>
+      
+      <!-- ループ説明 -->
+      <text x="300" y="250" text-anchor="middle" font-size="11" fill="#666" font-style="italic">これをぐるぐるループ。反応を見ながら次のレイヤーに進む</text>
+    </svg>
+    <div class="diagram-caption">料理と同じで「下味→下準備→本命」の段階的指示が当てるコツ</div>
+  </div>
+  
+  <div class="point-box">
+    <p>お父さんお母さんがセコンドをするなら、<strong>一度実際に道場で空手の練習を体験</strong>することを強く勧める。選手の気持ちや状況理解が深まり、指示の質が劇的に変わる。</p>
+  </div>
+  
+  <h3>選手側の心得</h3>
+  
+  <ul>
+    <li><strong>セコンドの声を聞く「練習」をする</strong>（普段の組手やサンドバッグで、指示を聞きながら動く訓練）</li>
+    <li>試合前にセコンドと<strong>「このときはこう言って」と事前打ち合わせ</strong>するのはOK・推奨</li>
+    <li>セコンドが不在の時は、ほかの人に指示の指示を事前に出しておく</li>
+  </ul>
+</section>
+
+<!-- セクション11：体作り -->
+<section class="section" id="s11">
+  <div class="section-number">十一</div>
+  <h2><span class="chapter-mark">第十一章</span>体作りと栄養</h2>
+  
+  <div class="warning-box">
+    <div class="label">絶対禁止事項</div>
+    <p><strong>20歳までは減量するな。</strong>成長期は人生で二度と戻らない。数kg減らしてウエイト制の試合に出るより、成長期にしっかり食べて大きくなる方が、空手人生トータルで圧倒的に得。</p>
+  </div>
+  
+  <h3>大きくなるための原則</h3>
+  
+  <p>成長には絶対に栄養が必要。<strong>栄養は自分で作り出せない</strong>ので、外部から摂取するしかない。食べる量を少しずつ増やす（練習量を少しずつ増やすのと同じ「漸進性の法則」）。</p>
+  
+  <div class="point-box">
+    <p><strong>大きい方が強い</strong>という発想を持つこと。象と犬ではどちらが強そうか、と同じ。重量級と軽量級で勝負したら、やはり重量級に分がある。「細マッチョで行きたい」という美意識より、格闘技としての強さを優先する。</p>
+  </div>
+  
+  <h3>ジュニアのトレーニング</h3>
+  
+  <ul>
+    <li>腕立て・スクワット・物権など<strong>自重トレは基本OK</strong>（量だけ注意）</li>
+    <li>骨を成長させたいなら<strong>ジャンプ系・衝撃のあるトレーニング</strong>（骨密度向上）</li>
+    <li>軽めのダンベル（5kg程度）、ケトルベルも可</li>
+    <li><strong>高重量のスクワット（100-200kg）は禁止</strong></li>
+    <li><strong>自分の全力を出す練習</strong>を最優先（フルスイング等）</li>
+  </ul>
+  
+  <h3>正しい身体操作が大前提</h3>
+  
+  <p>関節の可動域を超えた動きをすると怪我に繋がる。突きの時に手首が曲がっている、膝や腰を不自然に動かしている等は絶対に避ける。<strong>機能解剖学の知識</strong>は指導者・保護者も持っておくべき。</p>
+  
+  <div class="quote-box">自分の全力を出せない人間は、自分の扱える範囲を知らない。それが怪我のもと。</div>
+</section>
+
+<!-- セクション12：怪我の対処法 -->
+<section class="section" id="s12">
+  <div class="section-number">十二</div>
+  <h2><span class="chapter-mark">第十二章</span>怪我の対処法</h2>
+  
+  <h3>古いRICE法から新しいPEACE & LOVEへ</h3>
+  
+  <p>かつての常識「RICE（安静・冷却・圧迫・挙上）」は変化しつつある。現在は<strong>PEACE & LOVE</strong>という考え方が主流になりつつあり、<strong>痛みがなくなるまで完全安静にするのは逆効果</strong>。</p>
+  
+  <div class="timeline">
+    <div class="timeline-item">
+      <span class="timeline-time">受傷直後〜2、3日</span>
+      <div class="timeline-content">
+        炎症期。冷却（湿布やアイシング）を中心に、<strong>安静気味にする</strong>。
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-time">急性期を過ぎてから</span>
+      <div class="timeline-content">
+        <strong>痛くない範囲で動かし始める</strong>。「ちょっと痛い」程度までは積極的に。血流に乗せて栄養を患部に届けることで治癒が早まる。
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-time">リハビリ期</span>
+      <div class="timeline-content">
+        正しい身体操作で動かしつつ、関節機能・筋機能・神経機能が落ちないように維持。
+      </div>
+    </div>
+  </div>
+  
+  <div class="warning-box">
+    <div class="label">放置の危険性</div>
+    <p>痛みが消えるまで完全安静にしていると、<strong>関節・筋肉・神経の機能が失われる率が高くなる</strong>。リハビリ開始が遅れると回復も遅れる。</p>
+  </div>
+  
+  <p>※成長痛とスポーツ傷害は扱いが異なるため、ジュニアの場合は専門家の判断を仰ぐこと。</p>
+</section>
+
+<!-- セクション13：試合前の調整 -->
+<section class="section" id="s13">
+  <div class="section-number">十三</div>
+  <h2><span class="chapter-mark">第十三章</span>試合前の調整</h2>
+  
+  <h3>基本的な考え方</h3>
+  
+  <p>試合2週間前に最もキツいトレーニングのピークを置き、そこから徐々に疲労を抜いていくのが1つの型。ただし<strong>人によって疲労の抜け方・ピークの持っていき方は異なる</strong>ため、自分に合った方法を探す必要がある。</p>
+  
+  <h3>試合タイプによる準備の違い</h3>
+  
+  <table class="pro-table">
+    <tr><th>タイプ</th><th>特徴</th><th>準備方法</th></tr>
+    <tr><td>ABCDパターン型</td><td>相手に合わせて戦略を変える</td><td>複数の展開パターンを用意して練習</td></tr>
+    <tr><td>軸決め型</td><td>自分のファイトスタイルを貫く</td><td>1〜2パターンの軸を徹底し、その中で派生を磨く</td></tr>
+  </table>
+  
+  <div class="point-box">
+    <p>身体操作が上手く、緊張のコントロールができるタイプは「パターン多用型」が向く。焦りがちでやることを固定したい人は「軸決め型」が向く。自分がどちらかを理解した上で準備する。</p>
+  </div>
+  
+  <h3>調整のコツ</h3>
+  
+  <ul>
+    <li>1週間前までキツめのトレーニングを残すか、2週間前で抜くかは個人差</li>
+    <li>試合によって仕上げ方を変えて、正解を見つけていく</li>
+    <li><strong>心拍だけは試合直前まで上げておく</strong>(疲労は残さない)</li>
+  </ul>
+</section>
+
+<!-- セクション14：判定への向き合い -->
+<section class="section" id="s14">
+  <div class="section-number">十四</div>
+  <h2><span class="chapter-mark">第十四章</span>判定への向き合い方</h2>
+  
+  <p>金的の反則や判定ミスに関する問い。ジャッジする人が絶対であり、選手が覆すことはできないというのが大前提。</p>
+  
+  <h3>「預ける」という考え方</h3>
+  
+  <p>試合場に入った時点で、選手は<strong>ジャッジを審判に預けている</strong>。試合開始前と終了時に礼をするのは、その場・運営者・審判に対する感謝と信頼の表明。主審も覚悟を持ってその役目を引き受けている。</p>
+  
+  <div class="quote-box">審判に「預けた」のだから、結果は受け入れる。それが武道。</div>
+  
+  <h3>もし自分が加害側だった場合</h3>
+  
+  <p>グレーなことをしてしまったことを<strong>反省し、次にクリーンにやって勝つ方向に切り替える</strong>。グレーな差で勝たない技術、相手にグレーな当て方をされない技術、を磨く。</p>
+  
+  <h3>もし自分が被害側だった場合</h3>
+  
+  <ul>
+    <li>審判が「反則でない」と判定したなら、次に切り替える</li>
+    <li>わからない場面では、審判判断を尊重する</li>
+    <li>自分で抗議しに行くより、セコンド経由の方がいい</li>
+  </ul>
+  
+  <div class="point-box">
+    <p>「金的も、もらわない」「下段も、もらわない」──これも技術。<strong>もらわないのが最強</strong>であり、審判が判断に迷わない明確な差をつけて勝つのが本当の勝利。</p>
+  </div>
+</section>
+
+<!-- ========== 補足セクション ========== -->
+<section class="appendix">
+  <h2>補 　 足</h2>
+  <div class="appendix-sub">— セミナー内で「後で調べてね」と言及された項目 —</div>
+  
+  <div class="appendix-item">
+    <h3>機能解剖学</h3>
+    <span class="keyword">#身体操作</span>
+    <span class="keyword">#怪我予防</span>
+    <p>関節がどれだけの範囲で動くか、筋肉がどう連動するかを学ぶ学問。「機能解剖学」で検索。関節の可動域を超えない動きを身につけるため、指導者・保護者も基礎知識を持っておくべき。</p>
+  </div>
+  
+  <div class="appendix-item">
+    <h3>無換気トレーニング</h3>
+    <span class="keyword">#心拍上げ</span>
+    <span class="keyword">#試合合間</span>
+    <p>「無換気トレーニング」で検索すると詳細が出てくる。息を吐き切った状態で5秒全力運動→5秒休憩を6回繰り返す。短時間で心拍を上げて肺に刺激を入れる。科学的根拠もある方法。※高血圧の方は避けること。</p>
+  </div>
+  
+  <div class="appendix-item">
+    <h3>ピーキング・テーパリング</h3>
+    <span class="keyword">#試合前調整</span>
+    <span class="keyword">#コンディション</span>
+    <p>「ピーキング」「テーパリング」で検索。試合本番に合わせてコンディションのピークを持っていく調整法。2週間前〜1週間前からトレーニング量を減らし疲労を抜いていく手法だが、人によって最適な抜き方が異なる。</p>
+  </div>
+  
+  <div class="appendix-item">
+    <h3>マルトデキストリン / CCD</h3>
+    <span class="keyword">#エネルギー補給</span>
+    <span class="keyword">#サプリメント</span>
+    <p>粉末の炭水化物サプリ。水に溶かしてエネルギー補給と水分補給を同時に行える。「マルトデキストリン」または「CCD」で検索。試合会場でペットボトルに溶かして飲んでいる選手も多い。</p>
+  </div>
+  
+  <div class="appendix-item">
+    <h3>PEACE & LOVE（怪我の最新アプローチ）</h3>
+    <span class="keyword">#スポーツ障害</span>
+    <span class="keyword">#リハビリ</span>
+    <p>従来のRICEに代わる現代的な応急処置の考え方。急性期を過ぎたら痛みのない範囲で動かすことで、関節・筋・神経機能の低下を防ぎ、治癒を早める。「PEACE and LOVE 怪我」で検索。</p>
+  </div>
+  
+  <div class="appendix-item">
+    <h3>漸進性の法則</h3>
+    <span class="keyword">#トレーニング原則</span>
+    <span class="keyword">#成長</span>
+    <p>体作り・練習・栄養のすべてに共通する原則。少しずつ負荷を上げていくことでしか、身体は成長しない。いきなり限界を超える量はむしろ害になる。「漸進性過負荷の原則」「トレーニング5原則」などで検索。</p>
+  </div>
+  
+  <div class="appendix-item">
+    <h3>セコンドセミナー資料</h3>
+    <span class="keyword">#セコンド論</span>
+    <span class="keyword">#本部資料</span>
+    <p>講師が総本部で3年前に実施したセコンドセミナーの資料。今後ブラッシュアップして公開予定とのこと。セコンドの実務を体系的に学べる資料として注目。</p>
+  </div>
+</section>
+
+<!-- ========== フッター ========== -->
+<footer>
+  <div class="final-kanji">押　忍</div>
+  <div>極 真 館　組 手 セ ミ ナ ー　記 録</div>
+  <div style="margin-top: 8px; opacity: 0.6;">— 二 〇 二 六 年 —</div>
+</footer>
+
+</div>
+</body>
+</html>

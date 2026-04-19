@@ -287,6 +287,66 @@ with app.app_context():
     _ensure_april19_schedule()
 
 
+def _ensure_3bu_material():
+    """4/19セミナー3部「オンライン組手研究会」のMaterial（まとめ+動画）を追加/同期する（冪等）"""
+    try:
+        from models import Material, Seminar
+        # 3部のセミナーを取得
+        seminar = Seminar.query.filter_by(slug="2026-04-19-kumite-3").first()
+        if not seminar:
+            return
+
+        # ファイルからHTMLを常にロード（更新反映のため）
+        body_path = os.path.join(os.path.dirname(__file__), "static", "materials", "3bu_body.html")
+        latest_html = None
+        if os.path.exists(body_path):
+            with open(body_path, "r", encoding="utf-8") as f:
+                latest_html = f.read()
+        if not latest_html:
+            return
+
+        existing = Material.query.filter_by(seminar_id=seminar.id).first()
+        if existing:
+            changed = False
+            target_title = "組手指南録 — 質問回答セミナーまとめ + 動画"
+            if existing.title != target_title:
+                existing.title = target_title
+                changed = True
+            if existing.content_html != latest_html:
+                existing.content_html = latest_html
+                changed = True
+            # 動画/レポート表示が本体なのでPDFは未設定
+            if existing.file_path:
+                existing.file_path = None
+                changed = True
+            if changed:
+                db.session.commit()
+            return
+
+        m = Material(
+            seminar_id=seminar.id,
+            title="組手指南録 — 質問回答セミナーまとめ + 動画",
+            content_html=latest_html,
+            file_path=None,
+            is_free=False,
+            price=500,
+            sort_order=1,
+        )
+        db.session.add(m)
+        db.session.commit()
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_3bu_material] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_3bu_material()
+
+
+
 # ============================================
 # ヘルパー
 # ============================================
