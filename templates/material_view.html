@@ -17,31 +17,17 @@
         <p class="text-muted" style="font-size:0.85rem;">{{ seminar.title }} — {{ seminar.subtitle }}</p>
 
         {% if material.file_path %}
-        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-            <a href="{{ url_for('download_material', material_id=material.id) }}?dl=1"
-               target="_blank" rel="noopener"
-               download="ポジショニング論.pdf"
-               class="btn btn-primary btn-sm"
-               style="display:inline-flex; align-items:center; gap:6px;">
-                📥 PDFを保存
-            </a>
+        <div style="margin-top:14px;">
             <a href="{{ url_for('download_material', material_id=material.id) }}"
                target="_blank" rel="noopener"
-               class="btn btn-outline btn-sm"
-               style="display:inline-flex; align-items:center; gap:6px;">
-                📖 別タブで開く
+               class="btn btn-primary"
+               style="display:inline-flex; align-items:center; gap:8px; font-size:1rem; padding:12px 20px;">
+                📄 PDFを開く
             </a>
-        </div>
-        <p class="text-muted" style="font-size:0.78rem; margin-top:6px; line-height:1.55;">
-            📥「保存」→ Safariが開き右上のシェアボタンから「ファイルに保存」<br>
-            📖「別タブ」→ Safariで全画面表示。閉じればPWAに戻れます。
-        </p>
-        <!-- PDFインラインプレビュー -->
-        <div style="width:100%; height:520px; margin-top:14px; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#f9fafb;">
-            <iframe src="{{ url_for('download_material', material_id=material.id) }}#view=FitH"
-                    style="width:100%; height:100%; border:0;"
-                    title="PDFプレビュー"
-                    loading="lazy"></iframe>
+            <p class="text-muted" style="font-size:0.82rem; margin-top:10px; line-height:1.6;">
+                Safariの別タブでPDFが開きます。<br>
+                保存したいときは、右上の共有ボタン <span style="display:inline-block; padding:1px 6px; border:1px solid #ccc; border-radius:4px; font-size:0.85em;">⬆</span> →「ファイルに保存」を選んでください。
+            </p>
         </div>
         {% endif %}
     </div>
