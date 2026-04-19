@@ -1556,6 +1556,11 @@ def my_materials():
         user_id=user.id, status="completed"
     ).all()
     purchased_material_ids = [p.material_id for p in purchases if p.material_id]
+    # material_id -> 最新の Purchase オブジェクト（領収書リンク用）
+    purchase_by_material = {}
+    for pp in purchases:
+        if pp.material_id:
+            purchase_by_material[pp.material_id] = pp
 
     # 資料取得（出席 OR 購入 OR 無料公開）
     from sqlalchemy import or_
@@ -1588,6 +1593,7 @@ def my_materials():
             "via_attendance": s.id in attended_seminar_ids,
             "via_purchase": m.id in purchased_material_ids,
             "has_pdf": bool(m.file_path),
+            "purchase": purchase_by_material.get(m.id),
         })
 
     # 並び替え
@@ -1604,6 +1610,150 @@ def my_materials():
         rows=rows,
         q=q,
         sort=sort,
+    )
+
+
+@app.route("/receipt/<int:purchase_id>")
+@login_required
+def receipt_pdf(purchase_id):
+    """購入完了時の領収書PDFを生成して返す"""
+    user = get_current_user()
+    p = Purchase.query.get_or_404(purchase_id)
+    # 自分の購入のみ閲覧可能（管理者はkey指定で閲覧可）
+    admin_key = request.args.get("key", "")
+    is_admin = (admin_key == os.environ.get("ADMIN_KEY", "admin")) and admin_key
+    if p.user_id != user.id and not is_admin:
+        abort(403)
+    if p.status != "completed":
+        flash("領収書は決済完了後に発行できます", "error")
+        return redirect(url_for("my_materials"))
+
+    # 商品名
+    item_name = "極真館組手セミナー"
+    if p.material_id:
+        mat = Material.query.get(p.material_id)
+        if mat:
+            item_name = mat.title
+    elif p.video_id:
+        item_name = f"動画 #{p.video_id}"
+    elif p.item_type == "subscription":
+        item_name = "月額サブスクリプション"
+
+    # 受取人
+    buyer = User.query.get(p.user_id)
+    buyer_name = buyer.name if buyer else ""
+
+    # 決済方法
+    if p.stripe_session_id:
+        method = "クレジットカード（Stripe）"
+    elif p.square_order_id:
+        method = "クレジットカード（Square）"
+    else:
+        method = "その他"
+
+    # 発行情報（環境変数で上書き可）
+    issuer_name = app.config.get("RECEIPT_ISSUER_NAME") or "極真館組手セミナー"
+    issuer_detail = app.config.get("RECEIPT_ISSUER_DETAIL") or ""
+
+    # ReportLab で PDF を組み立て
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import mm
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+    import io
+
+    # 日本語フォント（Adobe CID標準: HeiseiKakuGo-W5）
+    try:
+        pdfmetrics.registerFont(UnicodeCIDFont("HeiseiKakuGo-W5"))
+        font_main = "HeiseiKakuGo-W5"
+    except Exception:
+        font_main = "Helvetica"
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+    margin = 20 * mm
+
+    # タイトル
+    c.setFont(font_main, 24)
+    c.drawCentredString(width / 2, height - margin - 10 * mm, "領 収 書")
+
+    # 領収書番号 / 発行日
+    c.setFont(font_main, 9)
+    issue_date = (p.completed_at or p.created_at or datetime.utcnow()).strftime("%Y年%m月%d日")
+    receipt_no = f"R-{p.id:08d}"
+    c.drawRightString(width - margin, height - margin, f"領収書No: {receipt_no}")
+    c.drawRightString(width - margin, height - margin - 5 * mm, f"発行日: {issue_date}")
+
+    # 宛名
+    y = height - margin - 30 * mm
+    c.setFont(font_main, 14)
+    c.drawString(margin, y, f"{buyer_name}　様")
+    c.line(margin, y - 2 * mm, margin + 100 * mm, y - 2 * mm)
+
+    # 金額（大きく）
+    y -= 20 * mm
+    c.setFont(font_main, 11)
+    c.drawString(margin, y, "金額")
+    c.setFont(font_main, 28)
+    amount_text = f"¥ {p.amount:,} -"
+    c.drawString(margin + 30 * mm, y, amount_text)
+    c.setFont(font_main, 9)
+    c.drawString(margin + 30 * mm, y - 6 * mm, "（消費税込）")
+
+    # 但し書き
+    y -= 22 * mm
+    c.setFont(font_main, 11)
+    c.drawString(margin, y, "但し")
+    c.setFont(font_main, 12)
+    tadashi = f"「{item_name}」代として"
+    c.drawString(margin + 15 * mm, y, tadashi)
+    c.line(margin + 15 * mm, y - 1.5 * mm, width - margin, y - 1.5 * mm)
+
+    y -= 8 * mm
+    c.setFont(font_main, 10)
+    c.drawString(margin, y, "上記正に領収いたしました。")
+
+    # 決済情報
+    y -= 15 * mm
+    c.setFont(font_main, 9)
+    c.drawString(margin, y, f"お支払方法: {method}")
+    if p.stripe_session_id:
+        c.drawString(margin, y - 4 * mm, f"取引ID: {p.stripe_session_id[:40]}")
+    elif p.square_order_id:
+        c.drawString(margin, y - 4 * mm, f"取引ID: {p.square_order_id[:40]}")
+
+    # 発行者
+    y_issuer = 50 * mm
+    c.setFont(font_main, 11)
+    c.drawRightString(width - margin, y_issuer, "発行者")
+    c.setFont(font_main, 13)
+    c.drawRightString(width - margin, y_issuer - 6 * mm, issuer_name)
+    if issuer_detail:
+        c.setFont(font_main, 9)
+        # 改行対応
+        for i, line in enumerate(issuer_detail.split("\n")):
+            c.drawRightString(width - margin, y_issuer - 12 * mm - (i * 4 * mm), line.strip())
+
+    # フッター
+    c.setFont(font_main, 7)
+    c.setFillGray(0.5)
+    c.drawCentredString(width / 2, 15 * mm, "本書は電子的に発行されたPDF領収書です。")
+
+    c.showPage()
+    c.save()
+    pdf_bytes = buf.getvalue()
+    buf.close()
+
+    from flask import Response
+    return Response(
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={
+            "Content-Disposition": f"inline; filename=receipt_{receipt_no}.pdf",
+            "Cache-Control": "private, no-cache",
+        },
     )
 
 

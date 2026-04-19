@@ -5,3 +5,4 @@ qrcode[pil]==8.0
 python-dotenv==1.1.0
 gunicorn==23.0.0
 psycopg2-binary==2.9.10
+reportlab==4.2.5

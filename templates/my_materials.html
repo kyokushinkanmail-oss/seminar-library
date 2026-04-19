@@ -56,6 +56,10 @@
             <a href="{{ url_for('download_material', material_id=row.material.id) }}"
                class="btn btn-outline btn-sm">📥 PDF</a>
             {% endif %}
+            {% if row.purchase %}
+            <a href="{{ url_for('receipt_pdf', purchase_id=row.purchase.id) }}"
+               class="btn btn-outline btn-sm" target="_blank" rel="noopener">🧾 領収書</a>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
