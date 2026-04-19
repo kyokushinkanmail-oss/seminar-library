@@ -623,6 +623,24 @@ def admin_qr(seminar_id):
     return render_template("admin/qr.html", seminar=seminar, qr_url=qr_url, key=admin_key)
 
 
+@app.route("/admin/material/<int:material_id>/qr")
+def admin_material_qr(material_id):
+    """資料QRコード表示（資料閲覧ページへのリンク）"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    material = Material.query.get_or_404(material_id)
+    seminar = Seminar.query.get(material.seminar_id)
+    qr_url = f"{app.config['BASE_URL']}/material/{material.id}"
+    return render_template(
+        "admin/material_qr.html",
+        material=material,
+        seminar=seminar,
+        qr_url=qr_url,
+        key=admin_key,
+    )
+
+
 @app.route("/admin/seminar/<int:seminar_id>/attendees")
 def admin_attendees(seminar_id):
     """登録者（出席者）一覧"""

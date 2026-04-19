@@ -27,10 +27,29 @@
 
         <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
             <a href="{{ url_for('admin_qr', seminar_id=seminar.id, key=request.args.get('key','')) }}"
-               class="btn btn-outline btn-sm">QRコード</a>
+               class="btn btn-outline btn-sm">セミナー登録QR</a>
             <a href="{{ url_for('admin_attendees', seminar_id=seminar.id, key=request.args.get('key','')) }}"
                class="btn btn-outline btn-sm">登録者一覧（{{ seminar.attendances | length }}）</a>
         </div>
+
+        {% if seminar.materials %}
+        <div style="margin-top:14px; padding-top:12px; border-top:1px dashed #e5e5e5;">
+            <p style="font-size:0.78rem; font-weight:700; color:#737373; margin:0 0 8px;">
+                📑 資料（{{ seminar.materials | length }}）
+            </p>
+            <div style="display:flex; flex-direction:column; gap:6px;">
+                {% for m in seminar.materials %}
+                <div style="display:flex; align-items:center; gap:8px; justify-content:space-between; background:#fafafa; border-radius:8px; padding:8px 10px;">
+                    <span style="font-size:0.82rem; color:#1f2937; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                        {{ m.title }}
+                    </span>
+                    <a href="{{ url_for('admin_material_qr', material_id=m.id, key=request.args.get('key','')) }}"
+                       class="btn btn-outline btn-sm" style="white-space:nowrap;">資料QR</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Zoom参加者登録 -->
         <details style="margin-top:12px;">

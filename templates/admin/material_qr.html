@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}資料QR — {{ material.title }}{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('admin_dashboard', key=key) }}" class="btn-back">← 戻る</a>
+        <span class="header-title">資料QRコード</span>
+    </div>
+</div>
+
+<div class="container py-4 text-center">
+    <div style="background:#fef2f2; border:1px solid #fca5a5; border-radius:12px; padding:14px; margin-bottom:20px;">
+        <p class="seminar-date" style="margin:0 0 4px;">{{ seminar.date_display }}</p>
+        <h2 style="font-size:1.1rem; font-weight:900; margin:0 0 4px;">{{ material.title }}</h2>
+        <p class="text-muted text-sm" style="margin:0;">{{ seminar.title }}</p>
+    </div>
+
+    <!-- QRコード -->
+    <div id="qrcode" style="display:inline-block; padding:16px; background:#fff; border:2px solid #e5e5e5; border-radius:16px; margin-bottom:16px;"></div>
+
+    <p style="font-size:0.82rem; color:#737373; word-break:break-all; margin-bottom:18px;">
+        {{ qr_url }}
+    </p>
+
+    <p style="font-size:0.9rem; font-weight:700; color:#404040; line-height:1.7; text-align:left; background:#f9fafb; border-radius:10px; padding:12px 14px;">
+        このQRコードを読み取ると資料ページが開き、<br>
+        スライド閲覧・PDFダウンロードができます。<br>
+        <span style="color:#991b1b; font-size:0.85rem;">※ 閲覧にはログインが必要です。</span>
+    </p>
+
+    <!-- アクションボタン -->
+    <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
+        <button onclick="downloadQR()" class="btn btn-red btn-block">
+            📥 QR画像をダウンロード
+        </button>
+        <button onclick="window.print()" class="btn btn-outline btn-block">
+            🖨 印刷する
+        </button>
+        {% if material.file_path %}
+        <a href="{{ qr_url }}" target="_blank" class="btn btn-outline btn-block">
+            👁 資料ページを開く（確認用）
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media print {
+    .header, .btn, a.btn { display: none !important; }
+    .container { max-width: 100%; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    new QRCode(document.getElementById("qrcode"), {
+        text: "{{ qr_url }}",
+        width: 280,
+        height: 280,
+        colorDark: "#1e2761",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+});
+
+function downloadQR() {
+    // qrcode.js はcanvas もしくは img を生成する。両方対応。
+    var container = document.getElementById("qrcode");
+    var canvas = container.querySelector("canvas");
+    var imgEl = container.querySelector("img");
+    var dataUrl = null;
+    if (canvas) {
+        dataUrl = canvas.toDataURL("image/png");
+    } else if (imgEl) {
+        dataUrl = imgEl.src;
+    } else {
+        alert("QRコードの生成に失敗しました");
+        return;
+    }
+    var a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "QR_{{ material.title | replace(' ', '_') | replace('/', '_') }}.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+</script>
+{% endblock %}
