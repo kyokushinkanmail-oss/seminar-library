@@ -366,6 +366,37 @@ with app.app_context():
     _ensure_material_price_2000()
 
 
+def _ensure_square_columns():
+    """materials.square_checkout_url / purchases.square_order_id を追加（冪等）"""
+    try:
+        from sqlalchemy import text
+        dialect = db.engine.dialect.name
+        with db.engine.connect() as conn:
+            if dialect == "postgresql":
+                conn.execute(text(
+                    "ALTER TABLE materials ADD COLUMN IF NOT EXISTS square_checkout_url VARCHAR(500)"
+                ))
+                conn.execute(text(
+                    "ALTER TABLE purchases ADD COLUMN IF NOT EXISTS square_order_id VARCHAR(255)"
+                ))
+            else:
+                # SQLite: PRAGMAで存在確認してからADD
+                def add_if_missing(table, col, ddl):
+                    cols = [r[1] for r in conn.execute(text(f"PRAGMA table_info({table})")).fetchall()]
+                    if col not in cols:
+                        conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {col} {ddl}"))
+                add_if_missing("materials", "square_checkout_url", "VARCHAR(500)")
+                add_if_missing("purchases", "square_order_id", "VARCHAR(255)")
+            conn.commit()
+        print("[ensure_square_columns] ok")
+    except Exception as e:
+        print(f"[ensure_square_columns] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_square_columns()
+
+
 
 
 # ============================================
@@ -769,6 +800,16 @@ def purchase_material(material_id):
     db.session.add(purchase)
     db.session.commit()
 
+    # Square優先 → Stripe → デモ
+    square_url = getattr(material, "square_checkout_url", None)
+    if square_url:
+        # SquareのCheckout Linkは ?note= か ?checkoutReferenceId= で参照を渡せる。
+        # 両方付けておけば、Webhook側でどちらかを拾える。
+        sep = "&" if "?" in square_url else "?"
+        return redirect(
+            f"{square_url}{sep}note=purchase_{purchase.id}&checkoutReferenceId=purchase_{purchase.id}"
+        )
+
     if material.stripe_payment_link:
         return redirect(
             f"{material.stripe_payment_link}?client_reference_id=purchase_{purchase.id}"
@@ -828,6 +869,113 @@ def stripe_webhook():
                 db.session.commit()
 
     return jsonify({"status": "ok"}), 200
+
+
+# ============================================
+# Square Webhook
+# ============================================
+def _square_complete_by_reference(reference_id: str, order_id: str = None):
+    """reference_id = "purchase_<id>" を元にPurchaseをcompletedにする"""
+    if not reference_id or not reference_id.startswith("purchase_"):
+        return False
+    try:
+        purchase_id = int(reference_id.replace("purchase_", ""))
+    except ValueError:
+        return False
+    purchase = Purchase.query.get(purchase_id)
+    if not purchase:
+        return False
+    if purchase.status != "completed":
+        purchase.status = "completed"
+        purchase.completed_at = datetime.utcnow()
+    if order_id:
+        purchase.square_order_id = order_id
+    db.session.commit()
+    return True
+
+
+@app.route("/webhook/square", methods=["POST"])
+def square_webhook():
+    """Square決済通知。HMAC-SHA256で署名検証して payment.* / order.fulfilled 等でPurchaseをcompletedにする。"""
+    import hmac, hashlib, base64, json as _json
+
+    signature_key = os.environ.get("SQUARE_WEBHOOK_SIGNATURE_KEY", "")
+    # Square は Notification URL（自分のエンドポイント）と body を結合した文字列を HMAC-SHA256 する
+    notification_url = os.environ.get("SQUARE_WEBHOOK_URL", "").strip()
+    if not notification_url:
+        # リクエスト URL から組み立て（Renderは X-Forwarded-* を透過するのでrequest.urlでOK）
+        notification_url = request.url
+
+    raw_body = request.get_data() or b""
+
+    sig_header = (
+        request.headers.get("x-square-hmacsha256-signature")
+        or request.headers.get("X-Square-Hmacsha256-Signature")
+        or request.headers.get("X-Square-HmacSha256-Signature")
+        or ""
+    )
+
+    if signature_key:
+        try:
+            mac = hmac.new(
+                signature_key.encode("utf-8"),
+                (notification_url + raw_body.decode("utf-8")).encode("utf-8"),
+                hashlib.sha256,
+            )
+            expected = base64.b64encode(mac.digest()).decode("utf-8")
+            if not hmac.compare_digest(expected, sig_header):
+                print(f"[square_webhook] signature mismatch; expected={expected[:8]}... got={sig_header[:8]}...")
+                return jsonify({"error": "invalid signature"}), 400
+        except Exception as e:
+            print(f"[square_webhook] signature check error: {e}")
+            return jsonify({"error": "signature check failed"}), 400
+    else:
+        # 署名キー未設定の場合はログだけ残して通す（開発モード）
+        print("[square_webhook] SQUARE_WEBHOOK_SIGNATURE_KEY not set — skipping signature check")
+
+    try:
+        body = _json.loads(raw_body.decode("utf-8") or "{}")
+    except Exception as e:
+        return jsonify({"error": f"invalid json: {e}"}), 400
+
+    event_type = body.get("type", "")
+    data_obj = (body.get("data") or {}).get("object") or {}
+
+    # パターン1: payment.created / payment.updated → payment.reference_id
+    payment = data_obj.get("payment") or {}
+    reference_id = payment.get("reference_id") or payment.get("note") or ""
+    order_id = payment.get("order_id") or payment.get("id") or ""
+
+    # パターン2: order.fulfillment.updated 等 → order.reference_id
+    if not reference_id:
+        order = data_obj.get("order") or {}
+        reference_id = order.get("reference_id") or ""
+        order_id = order_id or order.get("id", "")
+
+    # パターン3: checkout.created (Online Checkout) → checkout.note
+    if not reference_id:
+        checkout = data_obj.get("checkout") or {}
+        reference_id = checkout.get("note") or ""
+
+    # completed とみなすイベント
+    completed_events = {
+        "payment.updated",           # statusがCOMPLETEDに遷移
+        "payment.created",           # 即時COMPLETED決済
+        "order.fulfillment.updated", # 注文成立
+        "invoice.payment_made",
+        "checkout.created",          # Checkout経由完了時
+    }
+
+    if event_type in completed_events and reference_id:
+        # payment.updated の場合、本当に COMPLETED になったかチェック
+        if event_type in ("payment.created", "payment.updated"):
+            status = (payment.get("status") or "").upper()
+            if status and status != "COMPLETED" and status != "APPROVED":
+                return jsonify({"status": "ignored", "payment_status": status}), 200
+        ok = _square_complete_by_reference(reference_id, order_id)
+        return jsonify({"status": "ok" if ok else "no_match", "reference_id": reference_id}), 200
+
+    return jsonify({"status": "ignored", "event": event_type}), 200
 
 
 # ============================================
@@ -1261,6 +1409,11 @@ def admin_edit_material(material_id):
         except ValueError:
             material.price = 0
         material.stripe_payment_link = (request.form.get("stripe_payment_link") or "").strip() or None
+        try:
+            material.square_checkout_url = (request.form.get("square_checkout_url") or "").strip() or None
+        except Exception:
+            # 列未追加の環境でも落ちないようにガード
+            pass
         material.is_free = request.form.get("is_free") == "on"
         db.session.commit()
         flash("保存しました", "success")

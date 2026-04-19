@@ -34,15 +34,26 @@
                style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:1rem; margin-bottom:14px;">
 
         <label style="display:block; font-size:0.85rem; font-weight:700; color:#404040; margin-bottom:6px;">
-            Stripe Payment Link URL
+            ⬛ Square Checkout Link URL <span style="color:#16a34a; font-size:0.75rem;">（優先）</span>
+        </label>
+        <input type="url" name="square_checkout_url"
+               value="{{ material.square_checkout_url or '' }}"
+               placeholder="https://checkout.square.site/... または https://square.link/u/..."
+               style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.92rem; margin-bottom:6px;">
+        <p style="font-size:0.78rem; color:#737373; margin:0 0 14px;">
+            Squareダッシュボード →「オンラインチェックアウト」→「支払いリンク」で作成した URL を貼り付け。<br>
+            決済完了すると Webhook 経由で自動的にログインユーザーが閲覧可能になります。
+        </p>
+
+        <label style="display:block; font-size:0.85rem; font-weight:700; color:#404040; margin-bottom:6px;">
+            Stripe Payment Link URL <span style="color:#737373; font-size:0.75rem;">（予備）</span>
         </label>
         <input type="url" name="stripe_payment_link"
                value="{{ material.stripe_payment_link or '' }}"
                placeholder="https://buy.stripe.com/..."
                style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.92rem; margin-bottom:6px;">
         <p style="font-size:0.78rem; color:#737373; margin:0 0 14px;">
-            Stripeダッシュボードで作成した Payment Link の URL を貼り付けてください。<br>
-            空欄の場合、購入ボタンを押しても決済に進めません（準備中表示）。
+            Square が設定されている場合はそちらが優先されます。両方空の場合は「準備中」になります。
         </p>
 
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:18px; font-size:0.92rem; color:#404040;">
