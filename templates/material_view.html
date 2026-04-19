@@ -17,23 +17,31 @@
         <p class="text-muted" style="font-size:0.85rem;">{{ seminar.title }} — {{ seminar.subtitle }}</p>
 
         {% if material.file_path %}
-        <div style="margin-top:14px;">
-            <a href="{{ url_for('download_material', material_id=material.id) }}"
-               target="_blank" rel="noopener"
-               class="btn btn-primary"
-               style="display:inline-flex; align-items:center; gap:8px; font-size:1rem; padding:12px 20px;">
-                📄 PDFを開く
-            </a>
-            <p class="text-muted" style="font-size:0.82rem; margin-top:10px; line-height:1.6;">
-                Safariの別タブでPDFが開きます。<br>
-                保存したいときは、右上の共有ボタン <span style="display:inline-block; padding:1px 6px; border:1px solid #ccc; border-radius:4px; font-size:0.85em;">⬆</span> →「ファイルに保存」を選んでください。
-            </p>
-        </div>
+        <p class="text-muted" style="font-size:0.82rem; margin-top:14px; line-height:1.55;">
+            📑 全{{ '20' }}スライドを下に表示しています。画像を長押しすると「写真に追加」で保存できます。
+        </p>
         {% endif %}
     </div>
 
+    {% if material.file_path %}
+    <!-- スライド画像ギャラリー（PDFを画像化したもの） -->
+    <div class="slide-gallery" style="margin-top:18px; display:flex; flex-direction:column; gap:14px;">
+        {% for n in range(1, 21) %}
+        <div style="border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#0b1020; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+            <img src="/static/materials/slides/slide-{{ '%02d' % n }}.jpg"
+                 alt="スライド {{ n }} / 20"
+                 loading="lazy"
+                 style="width:100%; height:auto; display:block;">
+            <div style="background:#0b1020; color:#9ca3af; font-size:0.78rem; padding:6px 10px; text-align:right;">
+                {{ n }} / 20
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- HTML資料本文 -->
-    <div class="material-content">
+    <div class="material-content" style="margin-top:28px;">
         {{ material.content_html | safe }}
     </div>
 
