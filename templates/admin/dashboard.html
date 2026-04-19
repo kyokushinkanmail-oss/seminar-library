@@ -12,8 +12,11 @@
     <a href="{{ url_for('admin_new_seminar', key=request.args.get('key','')) }}" class="btn btn-red btn-block mb-2">
         ＋ 新規セミナー作成
     </a>
-    <a href="{{ url_for('admin_users', key=request.args.get('key','')) }}" class="btn btn-outline btn-block mb-4">
+    <a href="{{ url_for('admin_users', key=request.args.get('key','')) }}" class="btn btn-outline btn-block mb-2">
         👥 全登録ユーザーを見る
+    </a>
+    <a href="{{ url_for('admin_reports', key=request.args.get('key','')) }}" class="btn btn-outline btn-block mb-4">
+        📊 レポート（出席・売上・ファネル）
     </a>
 
     <p class="section-title">セミナー一覧</p>

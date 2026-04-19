@@ -74,3 +74,11 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  if (window.kyokushinTrack) {
+    kyokushinTrack("shop_view", { "count": "{{ materials|length if materials else 0 }}" });
+  }
+</script>
+{% endblock %}

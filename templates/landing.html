@@ -69,3 +69,14 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  if (window.kyokushinTrack) {
+    kyokushinTrack("landing_view", {
+      "seminar_slug": "{{ seminar.slug if seminar else '' }}",
+      "seminar_title": "{{ seminar.title if seminar else '' }}"
+    });
+  }
+</script>
+{% endblock %}

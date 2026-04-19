@@ -36,6 +36,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["STRIPE_SECRET_KEY"] = os.environ.get("STRIPE_SECRET_KEY", "")
 app.config["STRIPE_PUBLISHABLE_KEY"] = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 app.config["BASE_URL"] = os.environ.get("BASE_URL", "http://localhost:5000")
+app.config["GA_MEASUREMENT_ID"] = os.environ.get("GA_MEASUREMENT_ID", "")
+app.config["RECEIPT_ISSUER_NAME"] = os.environ.get("RECEIPT_ISSUER_NAME", "極真館組手セミナー")
+app.config["RECEIPT_ISSUER_DETAIL"] = os.environ.get("RECEIPT_ISSUER_DETAIL", "")
 
 # セッションを365日間保持（iPhone PWAでログイン状態を維持）
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=365)
@@ -1155,6 +1158,128 @@ def admin_dashboard():
         abort(403)
     seminars = Seminar.query.order_by(Seminar.date.desc()).all()
     return render_template("admin/dashboard.html", seminars=seminars)
+
+
+@app.route("/admin/reports")
+def admin_reports():
+    """出席・購入・ファネルの集計レポート"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+
+    from sqlalchemy import func
+    # 期間フィルタ（デフォルト30日）
+    try:
+        days = int(request.args.get("days", "30"))
+    except ValueError:
+        days = 30
+    since = datetime.utcnow() - timedelta(days=days)
+
+    # ユーザー統計
+    total_users = User.query.count()
+    new_users = User.query.filter(User.created_at >= since).count()
+
+    # 出席統計（期間内）
+    attendances_in = (
+        db.session.query(Attendance.seminar_id, func.count(Attendance.id))
+        .filter(Attendance.attended_at >= since)
+        .group_by(Attendance.seminar_id)
+        .all()
+    )
+    att_map = {sid: cnt for sid, cnt in attendances_in}
+
+    # 購入統計（期間内）
+    purchases = (
+        Purchase.query.filter(Purchase.created_at >= since)
+        .order_by(Purchase.created_at.desc())
+        .all()
+    )
+    completed_purchases = [p for p in purchases if p.status == "completed"]
+    pending_purchases = [p for p in purchases if p.status == "pending"]
+    total_sales = sum(p.amount or 0 for p in completed_purchases)
+
+    # 資料別売上
+    material_sales = {}
+    for p in completed_purchases:
+        if p.material_id:
+            mat = Material.query.get(p.material_id)
+            title = mat.title if mat else f"(削除済 id={p.material_id})"
+            s_item = material_sales.setdefault(title, {"count": 0, "amount": 0})
+            s_item["count"] += 1
+            s_item["amount"] += p.amount or 0
+
+    # セミナー別集計
+    seminar_stats = []
+    for sem in Seminar.query.order_by(Seminar.date.desc()).all():
+        seminar_stats.append({
+            "seminar": sem,
+            "attendance_count": att_map.get(sem.id, 0),
+            "material_count": Material.query.filter_by(seminar_id=sem.id).count(),
+        })
+
+    # ファネル: 登録 → 出席 → 購入
+    registered_in = new_users
+    attended_in = db.session.query(func.count(func.distinct(Attendance.user_id))) \
+        .filter(Attendance.attended_at >= since).scalar() or 0
+    purchased_in = len({p.user_id for p in completed_purchases})
+
+    funnel = {
+        "registered": registered_in,
+        "attended": attended_in,
+        "purchased": purchased_in,
+        "reg_to_att": (attended_in / registered_in * 100) if registered_in else 0,
+        "att_to_buy": (purchased_in / attended_in * 100) if attended_in else 0,
+    }
+
+    return render_template(
+        "admin/reports.html",
+        key=admin_key,
+        days=days,
+        total_users=total_users,
+        new_users=new_users,
+        total_sales=total_sales,
+        completed_count=len(completed_purchases),
+        pending_count=len(pending_purchases),
+        material_sales=material_sales,
+        seminar_stats=seminar_stats,
+        recent_purchases=purchases[:20],
+        funnel=funnel,
+    )
+
+
+@app.route("/admin/reports/purchases.csv")
+def admin_reports_csv():
+    """購入履歴CSVエクスポート"""
+    admin_key = request.args.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    import csv, io
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["purchase_id", "created_at", "completed_at", "status", "user_name", "branch", "item_type", "material_title", "amount", "stripe_session_id", "square_order_id"])
+    for p in Purchase.query.order_by(Purchase.created_at.desc()).all():
+        user = User.query.get(p.user_id) if p.user_id else None
+        mat = Material.query.get(p.material_id) if p.material_id else None
+        writer.writerow([
+            p.id,
+            p.created_at.isoformat() if p.created_at else "",
+            p.completed_at.isoformat() if p.completed_at else "",
+            p.status,
+            user.name if user else "",
+            user.branch_name if user else "",
+            p.item_type,
+            mat.title if mat else "",
+            p.amount,
+            p.stripe_session_id or "",
+            getattr(p, "square_order_id", "") or "",
+        ])
+    from flask import Response
+    output = buf.getvalue().encode("utf-8-sig")
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=purchases_{datetime.utcnow().strftime('%Y%m%d_%H%M')}.csv"},
+    )
 
 
 @app.route("/admin/seminar/new", methods=["GET", "POST"])

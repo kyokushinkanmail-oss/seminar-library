@@ -93,3 +93,29 @@
     <a href="{{ url_for('shop') }}" class="btn btn-outline btn-block">← ショップ一覧に戻る</a>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  if (window.kyokushinTrack) {
+    kyokushinTrack("shop_item_view", {
+      "material_id": "{{ material.id }}",
+      "title": "{{ material.title }}",
+      "price": {{ material.price or 0 }}
+    });
+  }
+  document.addEventListener("DOMContentLoaded", function(){
+    var btn = document.querySelector("form[action*='purchase'] button");
+    if (btn) {
+      btn.closest("form").addEventListener("submit", function(){
+        if (window.kyokushinTrack) {
+          kyokushinTrack("purchase_start", {
+            "material_id": "{{ material.id }}",
+            "title": "{{ material.title }}",
+            "price": {{ material.price or 0 }}
+          });
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

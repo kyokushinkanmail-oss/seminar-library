@@ -51,3 +51,22 @@
     </form>
 </div>
 {% endblock %}
+
+{% block scripts %}
+<script>
+  if (window.kyokushinTrack) {
+    kyokushinTrack("{{ 'register_start' if is_new else 'login_start' }}", {});
+  }
+  // フォームsubmitでregister_submitを発火
+  document.addEventListener("DOMContentLoaded", function(){
+    var form = document.querySelector("form");
+    if (form) {
+      form.addEventListener("submit", function(){
+        if (window.kyokushinTrack) {
+          kyokushinTrack("{{ 'register_submit' if is_new else 'login_submit' }}", {});
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

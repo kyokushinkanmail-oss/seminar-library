@@ -101,4 +101,11 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/qr-scanner.js') }}"></script>
+<script>
+  if (window.kyokushinTrack) {
+    kyokushinTrack("library_view", {
+      "user_id": "{{ user.id if user else '' }}"
+    });
+  }
+</script>
 {% endblock %}
