@@ -646,7 +646,52 @@ def logout():
         print(f"[logout] token clear skipped: {e}")
     session.clear()
     resp = redirect(url_for("landing"))
-    return _clear_remember_cookie(resp)
+    resp = _clear_remember_cookie(resp)
+    # JS側のlocalStorageもログアウト処理時にクリアできるよう、フラグcookieを立てる
+    resp.set_cookie("clear_rt", "1", max_age=10, path="/")
+    return resp
+
+
+@app.route("/auth/restore", methods=["POST"])
+def auth_restore():
+    """localStorageに保存されたrtトークンからセッション復元（PWA用）"""
+    data = request.get_json(silent=True) or {}
+    token = (data.get("rt") or "").strip()
+    if not token or len(token) > 128:
+        return jsonify({"ok": False, "error": "no_token"}), 400
+    try:
+        from models import User as _U
+        user = _U.query.filter_by(remember_token=token).first()
+        if not user:
+            return jsonify({"ok": False, "error": "invalid_token"}), 404
+        session.permanent = True
+        session["user_id"] = user.id
+        # rt Cookieも再発行（揮発分のリカバリ）
+        resp = jsonify({"ok": True, "redirect": url_for("library")})
+        return _set_remember_cookie(resp, token)
+    except Exception as e:
+        print(f"[auth_restore] error: {e}")
+        return jsonify({"ok": False, "error": "server_error"}), 500
+
+
+@app.route("/auth/token")
+def auth_token_for_js():
+    """ログイン中ユーザーの自分のrtトークンをJSに渡す（localStorage保存用）"""
+    if not session.get("user_id"):
+        return jsonify({"ok": False}), 401
+    try:
+        from models import User as _U
+        user = _U.query.get(session["user_id"])
+        if not user:
+            return jsonify({"ok": False}), 404
+        # tokenがなければ発行
+        if not user.remember_token:
+            user.remember_token = secrets.token_urlsafe(32)[:64]
+            db.session.commit()
+        return jsonify({"ok": True, "rt": user.remember_token})
+    except Exception as e:
+        print(f"[auth_token_for_js] error: {e}")
+        return jsonify({"ok": False}), 500
 
 
 def _process_pending_seminar(user):

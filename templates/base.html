@@ -45,6 +45,56 @@
             }, 3000);
         }
     });
+
+    // ============================================
+    // PWA Remember Me: localStorageベースの自動再ログイン
+    // ============================================
+    (function(){
+        try {
+            // logoutフラグが立っていればlocalStorageのrtを消してリセット
+            if (document.cookie.indexOf("clear_rt=1") !== -1) {
+                localStorage.removeItem("kyokushin_rt");
+            }
+
+            var hasSession = !!("{{ session.get('user_id', '') }}");
+            var path = window.location.pathname;
+            var isAuthPage = (path === "/" || path === "/login" || path === "/register" || path.indexOf("/s/") === 0);
+
+            if (hasSession) {
+                // ログイン中 → サーバから自分のrtを取得してlocalStorageへ保存
+                fetch("/auth/token", { credentials: "include" })
+                    .then(function(r){ return r.ok ? r.json() : null; })
+                    .then(function(d){
+                        if (d && d.ok && d.rt) {
+                            localStorage.setItem("kyokushin_rt", d.rt);
+                        }
+                    })
+                    .catch(function(){});
+            } else if (isAuthPage) {
+                // 未ログイン かつ 認証ページを開いた
+                // → localStorageにrtがあればサーバに送ってセッション復元
+                var t = localStorage.getItem("kyokushin_rt");
+                if (t) {
+                    fetch("/auth/restore", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ rt: t })
+                    })
+                    .then(function(r){ return r.ok ? r.json() : null; })
+                    .then(function(d){
+                        if (d && d.ok && d.redirect) {
+                            window.location.replace(d.redirect);
+                        } else if (d && d.error === "invalid_token") {
+                            // サーバ側で無効化済み → localStorageもクリア
+                            localStorage.removeItem("kyokushin_rt");
+                        }
+                    })
+                    .catch(function(){});
+                }
+            }
+        } catch (e) { /* localStorage不可環境は無視 */ }
+    })();
     </script>
     {% block scripts %}{% endblock %}
 </body>
