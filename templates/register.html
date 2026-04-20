@@ -1,52 +1,66 @@
 {% extends "base.html" %}
-{% block title %}{% if is_new %}新規登録{% else %}ログイン{% endif %} — 極真館組手セミナー{% endblock %}
+{% block title %}{% if is_new %}{{ t('register_title') }}{% else %}{{ t('login_title') }}{% endif %} — {{ t('app_title') }}{% endblock %}
 
 {% block body %}
 <div class="header">
     <div class="header-inner">
-        <a href="{{ url_for('landing') }}" class="btn-back">← 戻る</a>
+        <a href="{{ url_for('landing') }}" class="btn-back">← {{ t('back') }}</a>
     </div>
 </div>
 
 <div class="container py-4">
     <h2 style="font-size:1.4rem; font-weight:900; margin-bottom:8px;">
-        {% if is_new %}はじめての方{% else %}2回目以降の方{% endif %}
+        {% if is_new %}{{ t('register_title') }}{% else %}{{ t('login_title') }}{% endif %}
     </h2>
     <p class="text-muted mb-4" style="font-size:0.95rem; line-height:1.7;">
         {% if is_new %}
-        支部名・お名前・電話番号を登録すると、今後参加するセミナーの資料がたまっていきます。
+            {% if lang == 'en' %}
+            Enter your branch name, full name, and phone number. Materials from seminars you attend will accumulate in your library.
+            {% else %}
+            支部名・お名前・電話番号を登録すると、今後参加するセミナーの資料がたまっていきます。
+            {% endif %}
         {% else %}
-        前回登録した電話番号を入力してください。
+            {% if lang == 'en' %}
+            Please enter the phone number you registered with.
+            {% else %}
+            前回登録した電話番号を入力してください。
+            {% endif %}
         {% endif %}
     </p>
 
     <!-- タブ -->
     <div class="tab-group">
-        <a href="{{ url_for('register') }}" class="tab-btn {% if is_new %}active{% endif %}">初めて参加</a>
-        <a href="{{ url_for('login') }}" class="tab-btn {% if not is_new %}active{% endif %}">2回目以降</a>
+        <a href="{{ url_for('register') }}" class="tab-btn {% if is_new %}active{% endif %}">
+            {% if lang == 'en' %}New member{% else %}初めて参加{% endif %}
+        </a>
+        <a href="{{ url_for('login') }}" class="tab-btn {% if not is_new %}active{% endif %}">
+            {% if lang == 'en' %}Returning{% else %}2回目以降{% endif %}
+        </a>
     </div>
 
     <!-- フォーム -->
     <form method="POST" action="{% if is_new %}{{ url_for('register') }}{% else %}{{ url_for('login') }}{% endif %}">
         {% if is_new %}
         <div class="form-group">
-            <label class="form-label">支部名</label>
-            <input type="text" name="branch_name" class="form-input" placeholder="例：千葉支部／東京本部" required autocomplete="organization">
+            <label class="form-label">{{ t('register_branch_label') }}</label>
+            <input type="text" name="branch_name" class="form-input" placeholder="{{ t('register_branch_placeholder') }}" required autocomplete="organization">
         </div>
 
         <div class="form-group">
-            <label class="form-label">氏名（フルネーム）</label>
-            <input type="text" name="name" class="form-input" placeholder="山田太郎" required autocomplete="name">
+            <label class="form-label">{{ t('register_name_label') }}</label>
+            <input type="text" name="name" class="form-input" placeholder="{{ t('register_name_placeholder') }}" required autocomplete="name">
         </div>
         {% endif %}
 
         <div class="form-group">
-            <label class="form-label">電話番号</label>
+            <label class="form-label">
+                {% if lang == 'en' %}Phone number{% else %}電話番号{% endif %}
+            </label>
             <input type="tel" name="phone" class="form-input" placeholder="090-1234-5678" required autocomplete="tel">
         </div>
 
         <button type="submit" class="btn btn-red btn-block mt-4">
-            {% if is_new %}登録して資料を受け取る{% else %}ログイン{% endif %}
+            {% if is_new %}{{ t('register_submit') }}{% else %}{{ t('login_submit') }}{% endif %}
         </button>
     </form>
 </div>
@@ -57,7 +71,6 @@
   if (window.kyokushinTrack) {
     kyokushinTrack("{{ 'register_start' if is_new else 'login_start' }}", {});
   }
-  // フォームsubmitでregister_submitを発火
   document.addEventListener("DOMContentLoaded", function(){
     var form = document.querySelector("form");
     if (form) {

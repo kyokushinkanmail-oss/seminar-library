@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}マイライブラリ — 極真館組手セミナー{% endblock %}
+{% block title %}{{ t('library_title') }} — {{ t('app_title') }}{% endblock %}
 
 {% block body %}
 <!-- ユーザーヘッダー -->
@@ -7,8 +7,8 @@
     <div class="user-header-inner">
         <div class="user-avatar">{{ user.name[0] }}</div>
         <div>
-            <h1>{{ user.name }}さん</h1>
-            <p class="meta">参加セミナー {{ attendance_count }}回</p>
+            <h1>{% if lang == 'en' %}{{ user.name }}{% else %}{{ user.name }}さん{% endif %}</h1>
+            <p class="meta">{% if lang == 'en' %}{{ attendance_count }} seminars attended{% else %}参加セミナー {{ attendance_count }}回{% endif %}</p>
         </div>
     </div>
 </div>
@@ -36,18 +36,18 @@
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px;">
         <a href="{{ url_for('my_materials') }}" class="card card-clickable" style="display:block; text-align:center; padding:14px 10px; text-decoration:none; color:inherit;">
             <div style="font-size:1.6rem; line-height:1; margin-bottom:4px;">📚</div>
-            <div style="font-size:0.88rem; font-weight:700;">資料一覧</div>
-            <div style="font-size:0.72rem; color:#737373; margin-top:2px;">セミナー横断で検索</div>
+            <div style="font-size:0.88rem; font-weight:700;">{{ t('library_materials_card') }}</div>
+            <div style="font-size:0.72rem; color:#737373; margin-top:2px;">{% if lang == 'en' %}Cross-seminar search{% else %}セミナー横断で検索{% endif %}</div>
         </a>
         <a href="{{ url_for('shop') }}" class="card card-clickable" style="display:block; text-align:center; padding:14px 10px; text-decoration:none; color:inherit;">
             <div style="font-size:1.6rem; line-height:1; margin-bottom:4px;">🛒</div>
-            <div style="font-size:0.88rem; font-weight:700;">ショップ</div>
-            <div style="font-size:0.72rem; color:#737373; margin-top:2px;">過去資料を購入</div>
+            <div style="font-size:0.88rem; font-weight:700;">{{ t('nav_shop') }}</div>
+            <div style="font-size:0.72rem; color:#737373; margin-top:2px;">{% if lang == 'en' %}Past materials{% else %}過去資料を購入{% endif %}</div>
         </a>
     </div>
 
     <!-- セミナー一覧 -->
-    <p class="section-title">あなたの参加セミナー</p>
+    <p class="section-title">{{ t('library_attending_seminars') }}</p>
 
     {% if seminars %}
     {% for seminar in seminars %}
@@ -57,25 +57,25 @@
         <p class="text-muted" style="font-size:0.9rem;">{{ seminar.subtitle }}</p>
         <div class="mt-2">
             {% if seminar.materials | length > 0 %}
-            <span class="tag-small">📖 資料あり</span>
+            <span class="tag-small">📖 {% if lang == 'en' %}Materials{% else %}資料あり{% endif %}</span>
             {% endif %}
             {% if seminar.videos | length > 0 %}
-            <span class="tag-small">🎬 動画あり</span>
+            <span class="tag-small">🎬 {% if lang == 'en' %}Videos{% else %}動画あり{% endif %}</span>
             {% endif %}
         </div>
     </a>
     {% endfor %}
     {% else %}
     <div class="card text-center py-4">
-        <p style="font-size:1rem;">まだ参加セミナーがありません</p>
-        <p class="text-muted text-sm mt-2">セミナー会場でQRコードをスキャンしてください</p>
+        <p style="font-size:1rem;">{{ t('library_no_attendance') }}</p>
+        <p class="text-muted text-sm mt-2">{% if lang == 'en' %}Scan the QR code at the venue{% else %}セミナー会場でQRコードをスキャンしてください{% endif %}</p>
     </div>
     {% endif %}
 
     {% if upcoming %}
     <!-- 次回セミナー -->
     <div class="card card-yellow mt-4">
-        <p class="font-bold text-muted" style="font-size:0.85rem;">📅 次回セミナー</p>
+        <p class="font-bold text-muted" style="font-size:0.85rem;">📅 {{ t('landing_next_seminar') }}</p>
         <p style="font-size:1.05rem; font-weight:900; margin-top:8px;">{{ upcoming.date_display }}</p>
         <p class="text-muted mt-2" style="font-size:0.9rem;">{{ upcoming.title }}</p>
     </div>
@@ -83,12 +83,12 @@
 
     <!-- ログアウト -->
     <div class="text-center mt-6">
-        <a href="{{ url_for('logout') }}" class="text-muted text-sm">ログアウト</a>
+        <a href="{{ url_for('logout') }}" class="text-muted text-sm">{{ t('nav_logout') }}</a>
     </div>
 </div>
 
 <!-- QRスキャンボタン（FAB） -->
-<button class="qr-scan-fab" onclick="KyokushinQR.open()" aria-label="QRコードをスキャン">
+<button class="qr-scan-fab" onclick="KyokushinQR.open()" aria-label="{% if lang == 'en' %}Scan QR{% else %}QRコードをスキャン{% endif %}">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 8V5a1 1 0 0 1 1-1h3"/>
             <path d="M16 4h3a1 1 0 0 1 1 1v3"/>

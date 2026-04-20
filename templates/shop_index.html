@@ -1,34 +1,39 @@
 {% extends "base.html" %}
-{% block title %}資料ショップ — 極真館組手セミナー{% endblock %}
+{% block title %}{{ t('shop_title') }} — {{ t('app_title') }}{% endblock %}
 
 {% block body %}
 <div class="header">
     <div class="header-inner">
         {% if user %}
-        <a href="{{ url_for('library') }}" class="btn-back">← マイライブラリ</a>
+        <a href="{{ url_for('library') }}" class="btn-back">← {{ t('nav_library') }}</a>
         {% else %}
-        <a href="{{ url_for('landing') }}" class="btn-back">← TOP</a>
+        <a href="{{ url_for('landing') }}" class="btn-back">← {% if lang == 'en' %}Home{% else %}TOP{% endif %}</a>
         {% endif %}
-        <span class="header-title">資料ショップ</span>
+        <span class="header-title">{{ t('shop_title') }}</span>
     </div>
 </div>
 
 <div class="container py-4">
     <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d); color:#f5ede0; padding:20px 18px; border-radius:14px; margin-bottom:18px; box-shadow:0 4px 14px rgba(0,0,0,0.15);">
         <div style="font-size:10px; letter-spacing:3px; color:#c9a227; margin-bottom:4px;">KYOKUSHIN SEMINAR</div>
-        <h2 style="font-size:1.2rem; font-weight:900; margin:0 0 6px;">資料ショップ</h2>
+        <h2 style="font-size:1.2rem; font-weight:900; margin:0 0 6px;">{{ t('shop_title') }}</h2>
         <p style="font-size:0.88rem; opacity:0.8; margin:0; line-height:1.6;">
+            {% if lang == 'en' %}
+            Purchase individual materials from past seminars.<br>
+            After purchase, view them anytime from your library.
+            {% else %}
             過去のセミナー資料を個別に購入できます。<br>
             購入後はマイライブラリからいつでも閲覧可能です。
+            {% endif %}
         </p>
     </div>
 
     <form method="get" action="{{ url_for('shop') }}"
           style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" name="q" value="{{ q }}"
-               placeholder="資料タイトルで検索"
+               placeholder="{{ t('my_materials_search_placeholder') }}"
                style="flex:1; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.95rem;">
-        <button type="submit" class="btn btn-red btn-sm">検索</button>
+        <button type="submit" class="btn btn-red btn-sm">{{ t('search') }}</button>
     </form>
 
     {% if rows %}
@@ -38,14 +43,14 @@
        style="display:block; text-decoration:none; color:inherit; margin-bottom:12px; padding:14px 16px; position:relative;">
         {% if row.accessible %}
         <span style="position:absolute; top:10px; right:10px; background:#d1fae5; color:#065f46; font-size:0.7rem; font-weight:700; padding:3px 8px; border-radius:999px;">
-            ✔ 閲覧可能
+            ✔ {% if lang == 'en' %}Accessible{% else %}閲覧可能{% endif %}
         </span>
         {% endif %}
         <p class="seminar-date" style="font-size:0.78rem; color:#737373; margin:0 0 4px;">
             {{ row.seminar.date_display }}
         </p>
         <h3 style="font-size:1.02rem; font-weight:900; margin:0 0 4px; line-height:1.4; padding-right:70px;">
-            {{ row.material.title }}
+            {% if lang == 'en' and row.material.title_en %}{{ row.material.title_en }}{% else %}{{ row.material.title }}{% endif %}
         </h3>
         <p class="text-muted" style="font-size:0.82rem; margin:0 0 10px;">
             {{ row.seminar.title }}
@@ -56,19 +61,19 @@
                 ¥{{ '{:,}'.format(row.material.price) }}
             </span>
             {% else %}
-            <span style="font-size:0.88rem; color:#737373;">価格未設定</span>
+            <span style="font-size:0.88rem; color:#737373;">{% if lang == 'en' %}Price TBD{% else %}価格未設定{% endif %}</span>
             {% endif %}
-            <span style="color:#737373; font-size:0.88rem;">詳細 →</span>
+            <span style="color:#737373; font-size:0.88rem;">{{ t('shop_view_detail') }} →</span>
         </div>
     </a>
     {% endfor %}
     {% else %}
     <div class="card" style="text-align:center; padding:40px 20px;">
         <p class="text-muted">
-            {% if q %}該当する資料が見つかりません。{% else %}現在、販売中の資料はありません。{% endif %}
+            {% if q %}{{ t('my_materials_search_empty') }}{% else %}{{ t('shop_empty') }}{% endif %}
         </p>
         {% if q %}
-        <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm mt-2">検索をクリア</a>
+        <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm mt-2">{{ t('my_materials_clear_search') }}</a>
         {% endif %}
     </div>
     {% endif %}

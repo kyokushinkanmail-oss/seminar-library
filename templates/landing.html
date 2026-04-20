@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}極真館組手セミナーライブラリ{% endblock %}
+{% block title %}{{ t('app_title') }}{% endblock %}
 
 {% block body %}
 <!-- ヒーロー -->
 <div class="hero">
     <div class="container">
         <div class="hero-logo">極</div>
-        <h1>極真館組手セミナー</h1>
-        <p>資料・動画がすべて残る、学びのライブラリ</p>
+        <h1>{{ t('app_title') }}</h1>
+        <p>{{ t('app_subtitle') }}</p>
     </div>
 </div>
 
@@ -18,15 +18,15 @@
     <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:20px;">
         <div class="card" style="text-align:center; padding:12px 6px;">
             <p style="font-size:1.4rem; font-weight:900; color:#b91c1c; margin:0;">{{ stats.users }}</p>
-            <p style="font-size:0.7rem; color:#737373; margin:2px 0 0;">登録者</p>
+            <p style="font-size:0.7rem; color:#737373; margin:2px 0 0;">{{ t('landing_stat_users') }}</p>
         </div>
         <div class="card" style="text-align:center; padding:12px 6px;">
             <p style="font-size:1.4rem; font-weight:900; color:#b91c1c; margin:0;">{{ stats.seminars }}</p>
-            <p style="font-size:0.7rem; color:#737373; margin:2px 0 0;">開催セミナー</p>
+            <p style="font-size:0.7rem; color:#737373; margin:2px 0 0;">{{ t('landing_stat_seminars') }}</p>
         </div>
         <div class="card" style="text-align:center; padding:12px 6px;">
             <p style="font-size:1.4rem; font-weight:900; color:#b91c1c; margin:0;">{{ stats.materials }}</p>
-            <p style="font-size:0.7rem; color:#737373; margin:2px 0 0;">資料数</p>
+            <p style="font-size:0.7rem; color:#737373; margin:2px 0 0;">{{ t('landing_stat_materials') }}</p>
         </div>
     </div>
     {% endif %}
@@ -35,7 +35,7 @@
     <!-- 今回のセミナー情報 -->
     <div class="card mb-4" style="border:2px solid #b91c1c;">
         <div style="display:inline-block; background:#b91c1c; color:#fff; padding:3px 10px; border-radius:6px; font-size:0.72rem; font-weight:700; margin-bottom:8px;">
-            開催中
+            {{ t('landing_ongoing') }}
         </div>
         <p class="seminar-date">{{ seminar.date_display }}</p>
         <h2 style="font-size:1.2rem; font-weight:900; margin-bottom:6px; line-height:1.4;">
@@ -51,104 +51,107 @@
         </div>
         {% if stats and stats.latest_attendees > 0 %}
         <p style="font-size:0.8rem; color:#525252; margin-top:12px; padding-top:10px; border-top:1px dashed #e5e5e5;">
-            👥 すでに <strong style="color:#b91c1c;">{{ stats.latest_attendees }}名</strong> が参加登録済み
+            👥
+            {% if lang == 'en' %}
+                <strong style="color:#b91c1c;">{{ stats.latest_attendees }}</strong> people already registered
+            {% else %}
+                すでに <strong style="color:#b91c1c;">{{ stats.latest_attendees }}名</strong> が参加登録済み
+            {% endif %}
         </p>
         {% endif %}
     </div>
 
     <!-- 受け取れるもの -->
-    <p class="section-title">参加するとこれがもらえる</p>
+    <p class="section-title">{{ t('landing_benefits_title') }}</p>
     <div class="item-row mb-2">
         <span class="item-icon">📖</span>
         <div>
-            <p class="font-bold" style="margin:0;">セミナー資料（HTML/PDF）</p>
-            <p class="text-muted" style="font-size:0.78rem; margin:2px 0 0;">いつでもスマホで閲覧可能</p>
+            <p class="font-bold" style="margin:0;">{{ t('landing_benefit_material_t') }}</p>
+            <p class="text-muted" style="font-size:0.78rem; margin:2px 0 0;">{{ t('landing_benefit_material_d') }}</p>
         </div>
     </div>
     <div class="item-row mb-2">
         <span class="item-icon">🎬</span>
         <div>
-            <p class="font-bold" style="margin:0;">技術解説動画</p>
-            <p class="text-muted" style="font-size:0.78rem; margin:2px 0 0;">Zoom参加者は無料で視聴</p>
+            <p class="font-bold" style="margin:0;">{{ t('landing_benefit_video_t') }}</p>
+            <p class="text-muted" style="font-size:0.78rem; margin:2px 0 0;">{{ t('landing_benefit_video_d') }}</p>
         </div>
     </div>
     <div class="item-row mb-4">
         <span class="item-icon">📚</span>
         <div>
-            <p class="font-bold" style="margin:0;">参加した全セミナーの資料が貯まる</p>
-            <p class="text-muted" style="font-size:0.78rem; margin:2px 0 0;">あなた専用のマイライブラリ</p>
+            <p class="font-bold" style="margin:0;">{{ t('landing_benefit_lib_t') }}</p>
+            <p class="text-muted" style="font-size:0.78rem; margin:2px 0 0;">{{ t('landing_benefit_lib_d') }}</p>
         </div>
     </div>
 
-    <!-- CTA（1回目） -->
+    <!-- CTA -->
     <a href="{{ url_for('register') }}" class="btn btn-red btn-block mb-2"
        onclick="if(window.kyokushinTrack){kyokushinTrack('cta_register_click',{'location':'landing_primary'});}">
-        ＋ はじめての方 — 資料を受け取る（無料）
+        {{ t('landing_cta_register') }}
     </a>
     <a href="{{ url_for('login') }}" class="btn btn-outline btn-block mb-4"
        onclick="if(window.kyokushinTrack){kyokushinTrack('cta_login_click',{'location':'landing_primary'});}">
-        2回目以降の方 — ログイン
+        {{ t('landing_cta_login') }}
     </a>
 
     <!-- 3ステップ説明 -->
-    <p class="section-title">たった3ステップ</p>
+    <p class="section-title">{{ t('landing_steps_title') }}</p>
     <div class="card mb-4">
         <div style="display:flex; gap:12px; padding:10px 0;">
             <div style="flex:0 0 36px; height:36px; border-radius:50%; background:#fef2f2; color:#b91c1c; font-weight:900; display:flex; align-items:center; justify-content:center;">1</div>
             <div>
-                <p style="font-weight:800; margin:0 0 2px;">支部名と氏名で登録</p>
-                <p class="text-muted" style="font-size:0.8rem; margin:0;">30秒で完了、支部と氏名のみ</p>
+                <p style="font-weight:800; margin:0 0 2px;">{{ t('landing_step1_t') }}</p>
+                <p class="text-muted" style="font-size:0.8rem; margin:0;">{{ t('landing_step1_d') }}</p>
             </div>
         </div>
         <div style="display:flex; gap:12px; padding:10px 0; border-top:1px dashed #e5e5e5;">
             <div style="flex:0 0 36px; height:36px; border-radius:50%; background:#fef2f2; color:#b91c1c; font-weight:900; display:flex; align-items:center; justify-content:center;">2</div>
             <div>
-                <p style="font-weight:800; margin:0 0 2px;">セミナーに参加</p>
-                <p class="text-muted" style="font-size:0.8rem; margin:0;">会場QRまたはZoomで自動反映</p>
+                <p style="font-weight:800; margin:0 0 2px;">{{ t('landing_step2_t') }}</p>
+                <p class="text-muted" style="font-size:0.8rem; margin:0;">{{ t('landing_step2_d') }}</p>
             </div>
         </div>
         <div style="display:flex; gap:12px; padding:10px 0; border-top:1px dashed #e5e5e5;">
             <div style="flex:0 0 36px; height:36px; border-radius:50%; background:#fef2f2; color:#b91c1c; font-weight:900; display:flex; align-items:center; justify-content:center;">3</div>
             <div>
-                <p style="font-weight:800; margin:0 0 2px;">マイライブラリに資料が追加</p>
-                <p class="text-muted" style="font-size:0.8rem; margin:0;">何度でも復習可能、PDFダウンロードOK</p>
+                <p style="font-weight:800; margin:0 0 2px;">{{ t('landing_step3_t') }}</p>
+                <p class="text-muted" style="font-size:0.8rem; margin:0;">{{ t('landing_step3_d') }}</p>
             </div>
         </div>
     </div>
 
-    <!-- CTA（2回目・フッター） -->
     <a href="{{ url_for('register') }}" class="btn btn-red btn-block mb-4"
        onclick="if(window.kyokushinTrack){kyokushinTrack('cta_register_click',{'location':'landing_footer'});}">
-        今すぐ資料を受け取る →
+        {{ t('landing_cta_register_now') }}
     </a>
 
     {% else %}
     <div class="card text-center py-4">
-        <p style="font-size:1.1rem; font-weight:700;">現在公開中のセミナーはありません</p>
-        <p class="text-muted mt-2">次回のセミナーをお待ちください</p>
+        <p style="font-size:1.1rem; font-weight:700;">{{ t('landing_no_seminar') }}</p>
+        <p class="text-muted mt-2">{{ t('landing_wait_next') }}</p>
     </div>
     {% endif %}
 
     {% if upcoming %}
-    <!-- 次回セミナー -->
     <div class="card card-yellow mt-4">
-        <p class="font-bold text-muted" style="font-size:0.85rem;">📅 次回予告</p>
+        <p class="font-bold text-muted" style="font-size:0.85rem;">📅 {{ t('landing_next_seminar') }}</p>
         <p style="font-size:1.1rem; font-weight:900; margin-top:8px;">{{ upcoming.date_display }}</p>
-        <p class="text-muted mt-2" style="font-size:0.95rem;">{{ upcoming.title }}（詳細は後日お知らせ）</p>
+        <p class="text-muted mt-2" style="font-size:0.95rem;">{{ upcoming.title }} {{ t('landing_next_tbd') }}</p>
         <a href="{{ url_for('register') }}" class="btn btn-outline btn-sm mt-2"
            onclick="if(window.kyokushinTrack){kyokushinTrack('cta_register_click',{'location':'upcoming_teaser'});}">
-            先行エントリーする
+            {{ t('landing_next_preregister') }}
         </a>
     </div>
     {% endif %}
 
     <!-- ショップ誘導 -->
     <div class="card mt-4" style="background:#fafafa;">
-        <p class="font-bold" style="margin:0 0 4px;">🛒 過去セミナーの資料を個別購入</p>
-        <p class="text-muted" style="font-size:0.8rem; margin:0 0 10px;">参加できなかった回の資料もショップから購入できます</p>
+        <p class="font-bold" style="margin:0 0 4px;">🛒 {{ t('landing_shop_title') }}</p>
+        <p class="text-muted" style="font-size:0.8rem; margin:0 0 10px;">{{ t('landing_shop_desc') }}</p>
         <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm"
            onclick="if(window.kyokushinTrack){kyokushinTrack('cta_shop_click',{'location':'landing'});}">
-            ショップを見る →
+            {{ t('landing_shop_cta') }}
         </a>
     </div>
 
@@ -161,6 +164,7 @@
     kyokushinTrack("landing_view", {
       "seminar_slug": "{{ seminar.slug if seminar else '' }}",
       "seminar_title": "{{ seminar.title if seminar else '' }}",
+      "lang": "{{ lang }}",
       "has_upcoming": {{ 'true' if upcoming else 'false' }}
     });
   }

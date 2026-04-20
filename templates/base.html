@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="{{ lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, viewport-fit=cover">
@@ -41,6 +41,14 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+    <!-- 言語切替ボタン（全ページ右上） -->
+    {% set _next = request.path %}
+    <a href="{{ url_for('set_lang', code=('en' if lang == 'ja' else 'ja'), next=_next) }}"
+       class="lang-toggle"
+       aria-label="Switch language"
+       title="{{ 'Switch to English' if lang == 'ja' else '日本語に切替' }}">
+        🌐 <span>{{ 'EN' if lang == 'ja' else '日本語' }}</span>
+    </a>
     <!-- 通知 -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}

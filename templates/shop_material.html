@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}{{ material.title }} — 資料ショップ{% endblock %}
+{% block title %}{% if lang == 'en' and material.title_en %}{{ material.title_en }}{% else %}{{ material.title }}{% endif %} — {{ t('shop_title') }}{% endblock %}
 
 {% block body %}
 <div class="header">
     <div class="header-inner">
-        <a href="{{ url_for('shop') }}" class="btn-back">← ショップ</a>
-        <span class="header-title">資料詳細</span>
+        <a href="{{ url_for('shop') }}" class="btn-back">← {{ t('nav_shop') }}</a>
+        <span class="header-title">{% if lang == 'en' %}Material Details{% else %}資料詳細{% endif %}</span>
     </div>
 </div>
 
@@ -17,7 +17,7 @@
             {{ seminar.date_display }}
         </p>
         <h1 style="font-size:1.3rem; font-weight:900; margin:0 0 8px; line-height:1.4;">
-            {{ material.title }}
+            {% if lang == 'en' and material.title_en %}{{ material.title_en }}{% else %}{{ material.title }}{% endif %}
         </h1>
         <p style="font-size:0.85rem; opacity:0.8; margin:0;">{{ seminar.title }}</p>
         {% if seminar.subtitle %}
@@ -28,35 +28,44 @@
     <!-- 価格・購入CTA -->
     <div class="card" style="padding:18px; margin-bottom:18px; text-align:center;">
         {% if accessible %}
-        <p style="color:#065f46; font-weight:700; margin:0 0 10px;">✔ あなたはこの資料を閲覧できます</p>
+        <p style="color:#065f46; font-weight:700; margin:0 0 10px;">✔ {% if lang == 'en' %}You can view this material{% else %}あなたはこの資料を閲覧できます{% endif %}</p>
         <a href="{{ url_for('view_material', material_id=material.id) }}"
-           class="btn btn-red btn-block">📖 資料を開く</a>
+           class="btn btn-red btn-block">📖 {{ t('my_materials_open') }}</a>
         {% elif material.price and material.price > 0 %}
         <p style="font-size:0.78rem; color:#737373; margin:0 0 4px; letter-spacing:1px;">PRICE</p>
         <p style="font-size:1.8rem; font-weight:900; color:#b91c1c; margin:0 0 14px;">
             ¥{{ '{:,}'.format(material.price) }}
-            <span style="font-size:0.7rem; color:#737373; font-weight:400;">（税込）</span>
+            <span style="font-size:0.7rem; color:#737373; font-weight:400;">{% if lang == 'en' %}(tax incl.){% else %}（税込）{% endif %}</span>
         </p>
         {% if material.stripe_payment_link or material.square_checkout_url %}
         <form method="post" action="{{ url_for('purchase_material', material_id=material.id) }}">
             <button type="submit" class="btn btn-red btn-block"
-                    {% if not user %}disabled title="ログインしてください"{% endif %}>
-                🛒 購入する
+                    {% if not user %}disabled title="{% if lang == 'en' %}Please log in{% else %}ログインしてください{% endif %}"{% endif %}>
+                🛒 {{ t('shop_buy') }}
             </button>
         </form>
         {% if not user %}
         <p style="font-size:0.82rem; color:#737373; margin:10px 0 0;">
+            {% if lang == 'en' %}
+            Please <a href="{{ url_for('landing') }}" style="color:#b91c1c; font-weight:700;">log in</a> to purchase
+            {% else %}
             購入には<a href="{{ url_for('landing') }}" style="color:#b91c1c; font-weight:700;">ログイン</a>が必要です
+            {% endif %}
         </p>
         {% endif %}
         {% else %}
         <p style="color:#737373; font-size:0.88rem; margin:0;">
+            {% if lang == 'en' %}
+            Coming soon.<br>
+            Please <a href="mailto:" style="color:#b91c1c;">contact us</a> for purchase inquiries.
+            {% else %}
             ただいま準備中です。<br>
             購入をご希望の方は<a href="mailto:" style="color:#b91c1c;">こちら</a>までお問い合わせください。
+            {% endif %}
         </p>
         {% endif %}
         {% else %}
-        <p style="color:#737373;">価格未設定</p>
+        <p style="color:#737373;">{% if lang == 'en' %}Price TBD{% else %}価格未設定{% endif %}</p>
         {% endif %}
     </div>
 
@@ -68,7 +77,7 @@
             {{ preview }}
         </p>
         <p style="font-size:0.78rem; color:#a3a3a3; margin:10px 0 0; font-style:italic;">
-            ※ 続きは購入後にご覧いただけます
+            {% if lang == 'en' %}※ Full content available after purchase{% else %}※ 続きは購入後にご覧いただけます{% endif %}
         </p>
     </div>
     {% endif %}
@@ -90,7 +99,7 @@
     {% endif %}
 
     <!-- 戻る -->
-    <a href="{{ url_for('shop') }}" class="btn btn-outline btn-block">← ショップ一覧に戻る</a>
+    <a href="{{ url_for('shop') }}" class="btn btn-outline btn-block">← {% if lang == 'en' %}Back to shop{% else %}ショップ一覧に戻る{% endif %}</a>
 </div>
 {% endblock %}
 

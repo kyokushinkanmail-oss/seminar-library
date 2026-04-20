@@ -549,3 +549,40 @@ body {
     color: #525252;
     white-space: pre-line;
 }
+
+/* ============================================
+   Language Toggle Button (🌐)
+   ============================================ */
+.lang-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.92);
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: background 0.15s, transform 0.15s;
+}
+.lang-toggle:hover {
+    background: #ffffff;
+    text-decoration: none;
+    color: #b91c1c;
+}
+.lang-toggle:active {
+    transform: scale(0.96);
+}
+.lang-toggle span {
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+}

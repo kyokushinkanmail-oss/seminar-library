@@ -18,6 +18,7 @@ class User(db.Model):
     is_subscriber = db.Column(db.Boolean, default=False)  # 添削サブスク
     stripe_customer_id = db.Column(db.String(255), nullable=True)
     remember_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # PWA自動再ログイン用
+    language = db.Column(db.String(5), default="ja")  # 表示言語: ja / en
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     attendances = db.relationship("Attendance", back_populates="user")
@@ -78,7 +79,9 @@ class Material(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     seminar_id = db.Column(db.Integer, db.ForeignKey("seminars.id"), nullable=False)
     title = db.Column(db.String(200), nullable=False)
+    title_en = db.Column(db.String(200))  # 英語タイトル
     content_html = db.Column(db.Text)  # HTML形式の資料本文
+    content_html_en = db.Column(db.Text)  # HTML形式の資料本文（英語）
     file_path = db.Column(db.String(500))  # 元ファイル（PDFなど）のパス
     is_free = db.Column(db.Boolean, default=False)  # 出席者以外にも無料公開
     price = db.Column(db.Integer, default=0)  # 非出席者向け価格（0 = 非売品）

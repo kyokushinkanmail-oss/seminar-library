@@ -1,35 +1,39 @@
 {% extends "base.html" %}
-{% block title %}資料一覧 — 極真館組手セミナー{% endblock %}
+{% block title %}{{ t('my_materials_title') }} — {{ t('app_title') }}{% endblock %}
 
 {% block body %}
 <div class="user-header">
     <div class="user-header-inner">
         <div class="user-avatar">{{ user.name[0] }}</div>
         <div>
-            <h1>資料一覧</h1>
-            <p class="meta">{{ rows | length }}件の資料が閲覧できます</p>
+            <h1>{{ t('my_materials_title') }}</h1>
+            <p class="meta">
+                {% if lang == 'en' %}{{ rows | length }}{{ t('my_materials_count') }}
+                {% else %}{{ rows | length }}{{ t('my_materials_count') }}
+                {% endif %}
+            </p>
         </div>
     </div>
 </div>
 
 <div class="container py-4">
     <div style="display:flex; gap:8px; margin-bottom:10px;">
-        <a href="{{ url_for('library') }}" class="btn btn-outline btn-sm">← マイライブラリ</a>
-        <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm">🛒 ショップ</a>
+        <a href="{{ url_for('library') }}" class="btn btn-outline btn-sm">← {{ t('nav_library') }}</a>
+        <a href="{{ url_for('shop') }}" class="btn btn-outline btn-sm">🛒 {{ t('nav_shop') }}</a>
     </div>
 
     <form method="get" action="{{ url_for('my_materials') }}"
           style="display:flex; gap:8px; margin-bottom:16px;">
         <input type="text" name="q" value="{{ q }}"
-               placeholder="資料タイトルで検索"
+               placeholder="{{ t('my_materials_search_placeholder') }}"
                style="flex:1; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.95rem;">
         <select name="sort" onchange="this.form.submit()"
                 style="padding:10px 8px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.9rem; background:#fff;">
-            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>新しい順</option>
-            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>古い順</option>
-            <option value="title" {% if sort == 'title' %}selected{% endif %}>タイトル</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>{{ t('my_materials_sort_newest') }}</option>
+            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>{{ t('my_materials_sort_oldest') }}</option>
+            <option value="title" {% if sort == 'title' %}selected{% endif %}>{{ t('my_materials_sort_title') }}</option>
         </select>
-        <button type="submit" class="btn btn-red btn-sm">検索</button>
+        <button type="submit" class="btn btn-red btn-sm">{{ t('search') }}</button>
     </form>
 
     {% if rows %}
@@ -39,26 +43,26 @@
             {{ row.seminar.date_display }}
         </p>
         <h3 style="font-size:1.02rem; font-weight:900; margin:0 0 4px; line-height:1.4;">
-            {{ row.material.title }}
+            {% if lang == 'en' and row.material.title_en %}{{ row.material.title_en }}{% else %}{{ row.material.title }}{% endif %}
         </h3>
         <p class="text-muted" style="font-size:0.82rem; margin:0 0 10px;">
             {{ row.seminar.title }}
         </p>
         <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">
-            {% if row.via_attendance %}<span class="tag-small">✔ 参加済み</span>{% endif %}
-            {% if row.via_purchase %}<span class="tag-small">🛒 購入済み</span>{% endif %}
-            {% if row.material.is_free %}<span class="tag-small" style="background:#ecfdf5; color:#065f46;">無料</span>{% endif %}
+            {% if row.via_attendance %}<span class="tag-small">✔ {{ t('tag_attended') }}</span>{% endif %}
+            {% if row.via_purchase %}<span class="tag-small">🛒 {{ t('tag_purchased') }}</span>{% endif %}
+            {% if row.material.is_free %}<span class="tag-small" style="background:#ecfdf5; color:#065f46;">{{ t('free') }}</span>{% endif %}
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <a href="{{ url_for('view_material', material_id=row.material.id) }}"
-               class="btn btn-red btn-sm" style="flex:1;">📖 開く</a>
+               class="btn btn-red btn-sm" style="flex:1;">📖 {{ t('my_materials_open') }}</a>
             {% if row.has_pdf %}
             <a href="{{ url_for('download_material', material_id=row.material.id) }}"
-               class="btn btn-outline btn-sm">📥 PDF</a>
+               class="btn btn-outline btn-sm">📥 {{ t('my_materials_pdf') }}</a>
             {% endif %}
             {% if row.purchase %}
             <a href="{{ url_for('receipt_pdf', purchase_id=row.purchase.id) }}"
-               class="btn btn-outline btn-sm" target="_blank" rel="noopener">🧾 領収書</a>
+               class="btn btn-outline btn-sm" target="_blank" rel="noopener">🧾 {{ t('my_materials_receipt') }}</a>
             {% endif %}
         </div>
     </div>
@@ -66,15 +70,13 @@
     {% else %}
     <div class="card" style="text-align:center; padding:40px 20px;">
         <p class="text-muted" style="margin-bottom:8px;">
-            {% if q %}該当する資料が見つかりません。{% else %}まだ閲覧できる資料がありません。{% endif %}
+            {% if q %}{{ t('my_materials_search_empty') }}{% else %}{{ t('my_materials_empty') }}{% endif %}
         </p>
         {% if q %}
-        <a href="{{ url_for('my_materials') }}" class="btn btn-outline btn-sm">検索をクリア</a>
+        <a href="{{ url_for('my_materials') }}" class="btn btn-outline btn-sm">{{ t('my_materials_clear_search') }}</a>
         {% else %}
-        <p style="font-size:0.88rem; color:#737373;">
-            セミナーに参加するか、ショップで購入してください。
-        </p>
-        <a href="{{ url_for('shop') }}" class="btn btn-red btn-sm mt-2">🛒 ショップを見る</a>
+        <p style="font-size:0.88rem; color:#737373;">{{ t('my_materials_empty_hint') }}</p>
+        <a href="{{ url_for('shop') }}" class="btn btn-red btn-sm mt-2">🛒 {{ t('nav_shop') }}</a>
         {% endif %}
     </div>
     {% endif %}

@@ -12,11 +12,12 @@ from functools import wraps
 
 from flask import (
     Flask, render_template, request, redirect, url_for,
-    flash, session, jsonify, abort, send_from_directory
+    flash, session, jsonify, abort, send_from_directory, make_response
 )
 
 from database import db, init_db
 from models import User, Seminar, Attendance, Purchase, Material, Video
+from translations import t as _t, TRANSLATIONS
 
 # ============================================
 # アプリ初期化
@@ -459,6 +460,35 @@ with app.app_context():
     _ensure_remember_token_column()
 
 
+def _ensure_i18n_columns():
+    """users.language / materials.title_en / materials.content_html_en カラム追加（冪等）"""
+    try:
+        from sqlalchemy import text
+        dialect = db.engine.dialect.name
+        with db.engine.connect() as conn:
+            if dialect == "postgresql":
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS language VARCHAR(5) DEFAULT \'ja\'"))
+                conn.execute(text("ALTER TABLE materials ADD COLUMN IF NOT EXISTS title_en VARCHAR(200)"))
+                conn.execute(text("ALTER TABLE materials ADD COLUMN IF NOT EXISTS content_html_en TEXT"))
+            else:
+                ucols = [r[1] for r in conn.execute(text("PRAGMA table_info(users)")).fetchall()]
+                if "language" not in ucols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN language VARCHAR(5) DEFAULT 'ja'"))
+                mcols = [r[1] for r in conn.execute(text("PRAGMA table_info(materials)")).fetchall()]
+                if "title_en" not in mcols:
+                    conn.execute(text("ALTER TABLE materials ADD COLUMN title_en VARCHAR(200)"))
+                if "content_html_en" not in mcols:
+                    conn.execute(text("ALTER TABLE materials ADD COLUMN content_html_en TEXT"))
+            conn.commit()
+        print("[ensure_i18n_columns] ok")
+    except Exception as e:
+        print(f"[ensure_i18n_columns] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_i18n_columns()
+
+
 def _issue_remember_token(user):
     """ユーザーに新しいremember_tokenを発行・保存して返す"""
     from models import User as _U
@@ -510,6 +540,80 @@ def _auto_login_from_remember_cookie():
 # ============================================
 # ヘルパー
 # ============================================
+# ============================================
+# i18n（言語切替）
+# ============================================
+SUPPORTED_LANGS = {"ja", "en"}
+LANG_COOKIE_NAME = "lang"
+LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365  # 1年
+
+
+def get_current_lang():
+    """セッション → cookie → ユーザーDB → デフォルトja の順で言語を決定"""
+    # 1. URL ?lang= 即時切替（保存はset_lang側）
+    qlang = request.args.get("lang", "").lower()
+    if qlang in SUPPORTED_LANGS:
+        return qlang
+    # 2. セッション
+    if session.get("lang") in SUPPORTED_LANGS:
+        return session["lang"]
+    # 3. cookie
+    c = request.cookies.get(LANG_COOKIE_NAME, "").lower()
+    if c in SUPPORTED_LANGS:
+        return c
+    # 4. ユーザーDBの language カラム（あれば）
+    uid = session.get("user_id")
+    if uid:
+        try:
+            u = User.query.get(uid)
+            if u and getattr(u, "language", None) in SUPPORTED_LANGS:
+                return u.language
+        except Exception:
+            pass
+    return "ja"
+
+
+@app.route("/lang/<code>")
+def set_lang(code):
+    """言語切替: cookie/session/ユーザーDB に保存して直前ページへ戻る"""
+    code = (code or "").lower()
+    if code not in SUPPORTED_LANGS:
+        code = "ja"
+    session["lang"] = code
+    # ユーザーDBにも保存（ある場合）
+    uid = session.get("user_id")
+    if uid:
+        try:
+            u = User.query.get(uid)
+            if u and hasattr(u, "language"):
+                u.language = code
+                db.session.commit()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+    nxt = request.args.get("next") or request.referrer or url_for("landing")
+    resp = make_response(redirect(nxt))
+    resp.set_cookie(
+        LANG_COOKIE_NAME, code,
+        max_age=LANG_COOKIE_MAX_AGE,
+        httponly=False, samesite="Lax", secure=False,
+        path="/",
+    )
+    return resp
+
+
+@app.context_processor
+def inject_i18n():
+    """テンプレートに lang と t() を注入"""
+    lang = get_current_lang()
+    return {
+        "lang": lang,
+        "t": lambda key: _t(key, lang),
+    }
+
+
 def login_required(f):
     """ログイン必須デコレータ"""
     @wraps(f)
@@ -1883,6 +1987,15 @@ def admin_edit_material(material_id):
             # 列未追加の環境でも落ちないようにガード
             pass
         material.is_free = request.form.get("is_free") == "on"
+        # 英語版（任意）
+        try:
+            title_en = (request.form.get("title_en") or "").strip() or None
+            content_html_en = (request.form.get("content_html_en") or "").strip() or None
+            material.title_en = title_en
+            material.content_html_en = content_html_en
+        except Exception:
+            # 列未追加環境でも落ちないように
+            pass
         db.session.commit()
         flash("保存しました", "success")
         return redirect(url_for("admin_edit_material", material_id=material.id, key=admin_key))

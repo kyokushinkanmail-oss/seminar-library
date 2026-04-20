@@ -33,6 +33,31 @@
         <input type="number" name="price" value="{{ material.price or 0 }}" min="0" step="100"
                style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:1rem; margin-bottom:14px;">
 
+        <details style="margin-bottom:18px; padding:10px 12px; background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px;">
+            <summary style="font-size:0.85rem; font-weight:700; color:#404040; cursor:pointer;">
+                🌐 英語版タイトル・本文（任意）
+            </summary>
+            <div style="margin-top:12px;">
+                <label style="display:block; font-size:0.82rem; font-weight:700; color:#525252; margin-bottom:4px;">
+                    Title (English)
+                </label>
+                <input type="text" name="title_en" value="{{ material.title_en or '' }}"
+                       placeholder="English title"
+                       style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.92rem; margin-bottom:10px;">
+
+                <label style="display:block; font-size:0.82rem; font-weight:700; color:#525252; margin-bottom:4px;">
+                    Content HTML (English)
+                </label>
+                <textarea name="content_html_en" rows="8"
+                          placeholder="English HTML content (leave blank to show Japanese for EN users)"
+                          style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-family:monospace; font-size:0.82rem;">{{ material.content_html_en or '' }}</textarea>
+                <p style="font-size:0.72rem; color:#737373; margin:6px 0 0;">
+                    空欄の場合、英語ユーザーにも日本語版が表示されます。
+                </p>
+            </div>
+        </details>
+
+
         <label style="display:block; font-size:0.85rem; font-weight:700; color:#404040; margin-bottom:6px;">
             ⬛ Square Checkout Link URL <span style="color:#16a34a; font-size:0.75rem;">（優先）</span>
         </label>
