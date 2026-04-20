@@ -488,6 +488,71 @@ def _ensure_i18n_columns():
 with app.app_context():
     _ensure_i18n_columns()
 
+def _ensure_materials_en_content():
+    """販売中3資料（positioning / kinni / 3bu）のtitle_en / content_html_enをファイルから同期（冪等）。
+    static/materials/*_body_en.html の内容を本番DBに反映する。
+    """
+    try:
+        from models import Material
+        base_dir = os.path.join(os.path.dirname(__file__), "static", "materials")
+
+        # (検索条件, title_en, bodyファイル名)
+        plan = [
+            (
+                lambda: Material.query.filter(Material.title.like("%ポジショニング%")).first(),
+                "Positioning Theory — Angles, Inside and Outside",
+                "positioning_body_en.html",
+            ),
+            (
+                lambda: Material.query.filter(
+                    (Material.title.like("%肘%膝%"))
+                    | (Material.file_path == "materials/kinni.pdf")
+                ).first(),
+                "Elbow & Knee Seminar — The Ultimate Close-Range Weapons",
+                "kinni_body_en.html",
+            ),
+            (
+                lambda: Material.query.filter(Material.title.like("%指南録%")).first(),
+                "Kumite Guidebook — Q&A Seminar Summary + Video",
+                "3bu_body_en.html",
+            ),
+        ]
+
+        touched = 0
+        for finder, title_en, body_file in plan:
+            m = finder()
+            if not m:
+                continue
+            body_path = os.path.join(base_dir, body_file)
+            body_html = None
+            if os.path.exists(body_path):
+                with open(body_path, "r", encoding="utf-8") as f:
+                    body_html = f.read()
+
+            changed = False
+            if getattr(m, "title_en", None) != title_en:
+                m.title_en = title_en
+                changed = True
+            if body_html and getattr(m, "content_html_en", None) != body_html:
+                m.content_html_en = body_html
+                changed = True
+            if changed:
+                touched += 1
+        if touched:
+            db.session.commit()
+        print(f"[ensure_materials_en_content] updated {touched}/{len(plan)}")
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_materials_en_content] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_materials_en_content()
+
+
 
 def _issue_remember_token(user):
     """ユーザーに新しいremember_tokenを発行・保存して返す"""

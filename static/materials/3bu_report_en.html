@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kumite Seminar Report | Kyokushinkan</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Shippori+Mincho:wght@500;700;900&family=BIZ+UDPMincho&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #2d2d2d;
+    --paper: #f5ede0;
+    --paper-warm: #ebe0c5;
+    --washi: #f8f1e0;
+    --crimson: #a8201a;
+    --crimson-deep: #7a1612;
+    --gold: #a6830e;
+    --gold-pale: #c9a227;
+    --bamboo: #3d5a40;
+    --stamp-red: #c62828;
+    --gray-line: #d0c7b5;
+  }
+  
+  html { scroll-behavior: smooth; }
+  
+  body {
+    font-family: 'BIZ UDPMincho', 'Noto Serif JP', serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.9;
+    font-size: 15px;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(168, 32, 26, 0.04) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 90%, rgba(166, 131, 14, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+  
+  /* 和紙テクスチャ（軽めのノイズ） */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    z-index: 1;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* ========== ヘッダー ========== */
+  .hero {
+    position: relative;
+    padding: 80px 0 60px;
+    border-bottom: 1px solid var(--gray-line);
+    margin-bottom: 60px;
+  }
+  
+  .hero::before {
+    content: '極';
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(200px, 35vw, 400px);
+    color: var(--crimson);
+    opacity: 0.06;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .hero-tag {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 11px;
+    letter-spacing: 10px;
+    color: var(--crimson);
+    border-top: 1px solid var(--crimson);
+    border-bottom: 1px solid var(--crimson);
+    display: inline-block;
+    padding: 6px 20px;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero h1 .accent {
+    color: var(--crimson);
+  }
+  
+  .hero-subtitle {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(14px, 2vw, 17px);
+    color: var(--ink-soft);
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-meta {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  .hero-meta span {
+    padding-right: 30px;
+    border-right: 1px solid var(--gray-line);
+  }
+  .hero-meta span:last-child { border: none; }
+  .hero-meta strong {
+    color: var(--crimson);
+    font-weight: 700;
+  }
+  
+  /* 朱印スタンプ */
+  .stamp {
+    position: absolute;
+    top: 100px;
+    right: 40px;
+    width: 90px;
+    height: 90px;
+    border: 4px double var(--stamp-red);
+    background: rgba(198, 40, 40, 0.08);
+    transform: rotate(-8deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    color: var(--stamp-red);
+    font-size: 13px;
+    letter-spacing: 2px;
+    line-height: 1.2;
+    opacity: 0.9;
+    z-index: 3;
+  }
+  
+  /* ========== 目次 ========== */
+  .toc {
+    background: var(--washi);
+    border: 1px solid var(--gray-line);
+    border-left: 4px solid var(--crimson);
+    padding: 28px 32px;
+    margin-bottom: 60px;
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.03);
+  }
+  
+  .toc-title {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 18px;
+    color: var(--crimson);
+    margin-bottom: 16px;
+    letter-spacing: 3px;
+    border-bottom: 1px dashed var(--gray-line);
+    padding-bottom: 10px;
+  }
+  
+  .toc ol {
+    list-style: none;
+    column-count: 2;
+    column-gap: 30px;
+  }
+  
+  @media (max-width: 600px) {
+    .toc ol { column-count: 1; }
+  }
+  
+  .toc li {
+    font-size: 13px;
+    margin-bottom: 8px;
+    break-inside: avoid;
+  }
+  
+  .toc li a {
+    color: var(--ink);
+    text-decoration: none;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    transition: color 0.2s;
+  }
+  
+  .toc li a:hover {
+    color: var(--crimson);
+  }
+  
+  .toc li .num {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    color: var(--crimson);
+    font-size: 11px;
+    min-width: 22px;
+  }
+  
+  /* ========== セクション ========== */
+  .section {
+    margin-bottom: 60px;
+    position: relative;
+  }
+  
+  .section-number {
+    position: absolute;
+    top: -10px;
+    left: -8px;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 120px;
+    color: var(--crimson);
+    opacity: 0.08;
+    line-height: 1;
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  .section h2 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(22px, 3.5vw, 30px);
+    color: var(--ink);
+    padding: 12px 0 12px 20px;
+    margin-bottom: 24px;
+    border-left: 5px solid var(--crimson);
+    position: relative;
+    z-index: 2;
+    letter-spacing: 1px;
+  }
+  
+  .section h2 .chapter-mark {
+    font-size: 0.55em;
+    color: var(--crimson);
+    font-weight: 700;
+    margin-right: 12px;
+    letter-spacing: 3px;
+  }
+  
+  .section h3 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 19px;
+    color: var(--crimson-deep);
+    margin: 28px 0 12px;
+    padding-left: 14px;
+    border-left: 3px solid var(--gold-pale);
+    letter-spacing: 0.5px;
+  }
+  
+  .section p {
+    margin-bottom: 16px;
+    color: var(--ink-soft);
+  }
+  
+  .section strong {
+    color: var(--crimson);
+    font-weight: 700;
+    background: linear-gradient(transparent 65%, rgba(168, 32, 26, 0.12) 65%);
+    padding: 0 2px;
+  }
+  
+  .section ul, .section ol {
+    margin: 14px 0 20px 24px;
+  }
+  
+  .section li {
+    margin-bottom: 8px;
+    color: var(--ink-soft);
+  }
+  
+  .section ul li::marker {
+    color: var(--crimson);
+  }
+  
+  /* ========== ポイントボックス ========== */
+  .point-box {
+    background: linear-gradient(135deg, var(--washi) 0%, var(--paper-warm) 100%);
+    border: 1px solid var(--gold-pale);
+    padding: 22px 26px;
+    margin: 24px 0;
+    position: relative;
+    box-shadow: 3px 3px 0 rgba(166, 131, 14, 0.15);
+  }
+  
+  .point-box::before {
+    content: '要点';
+    position: absolute;
+    top: -12px;
+    left: 16px;
+    background: var(--crimson);
+    color: var(--paper);
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 12px;
+    padding: 3px 14px;
+    letter-spacing: 3px;
+  }
+  
+  .point-box p:last-child { margin-bottom: 0; }
+  
+  /* 注意ボックス */
+  .warning-box {
+    background: rgba(168, 32, 26, 0.06);
+    border: 1px solid var(--crimson);
+    border-left-width: 5px;
+    padding: 20px 24px;
+    margin: 24px 0;
+    position: relative;
+  }
+  
+  .warning-box::before {
+    content: '⚠';
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-size: 24px;
+    color: var(--crimson);
+  }
+  
+  .warning-box .label {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    color: var(--crimson);
+    font-size: 14px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  
+  /* 引用ボックス */
+  .quote-box {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--ink);
+    padding: 20px 30px;
+    margin: 24px 0;
+    border-top: 2px solid var(--gold);
+    border-bottom: 2px solid var(--gold);
+    text-align: center;
+    position: relative;
+    background: linear-gradient(180deg, transparent 0%, rgba(166, 131, 14, 0.04) 50%, transparent 100%);
+  }
+  
+  .quote-box::before,
+  .quote-box::after {
+    font-size: 32px;
+    color: var(--gold);
+    line-height: 0;
+  }
+  .quote-box::before { content: '「'; }
+  .quote-box::after { content: '」'; }
+  
+  /* ========== 図解 ========== */
+  .diagram {
+    margin: 30px 0;
+    padding: 24px;
+    background: var(--washi);
+    border: 1px solid var(--gray-line);
+    position: relative;
+  }
+  
+  .diagram-title {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--crimson);
+    margin-bottom: 16px;
+    text-align: center;
+    letter-spacing: 3px;
+  }
+  
+  .diagram-title::before,
+  .diagram-title::after {
+    content: '※';
+    margin: 0 8px;
+    opacity: 0.5;
+  }
+  
+  .diagram svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+  
+  .diagram-caption {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 12px;
+    font-style: italic;
+  }
+  
+  /* ========== テーブル ========== */
+  .pro-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 13px;
+    background: var(--washi);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.04);
+  }
+  
+  .pro-table th {
+    background: var(--crimson);
+    color: var(--paper);
+    padding: 12px 16px;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    text-align: left;
+    letter-spacing: 2px;
+    font-size: 13px;
+  }
+  
+  .pro-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-line);
+    vertical-align: top;
+  }
+  
+  .pro-table tr:last-child td { border-bottom: none; }
+  
+  .pro-table tr:nth-child(even) td {
+    background: rgba(255,255,255,0.4);
+  }
+  
+  /* ========== タイムライン ========== */
+  .timeline {
+    margin: 30px 0;
+    position: relative;
+    padding-left: 30px;
+  }
+  
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 8px;
+    bottom: 8px;
+    width: 2px;
+    background: var(--crimson);
+  }
+  
+  .timeline-item {
+    position: relative;
+    margin-bottom: 22px;
+  }
+  
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -27px;
+    top: 4px;
+    width: 16px;
+    height: 16px;
+    background: var(--paper);
+    border: 3px solid var(--crimson);
+    border-radius: 50%;
+  }
+  
+  .timeline-time {
+    display: inline-block;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--crimson);
+    background: var(--paper-warm);
+    padding: 3px 12px;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+  
+  .timeline-content {
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  
+  /* ========== 補足セクション ========== */
+  .appendix {
+    margin-top: 80px;
+    padding: 40px 0;
+    border-top: 3px double var(--gold);
+    border-bottom: 3px double var(--gold);
+    background: linear-gradient(180deg, transparent 0%, rgba(166, 131, 14, 0.04) 50%, transparent 100%);
+  }
+  
+  .appendix h2 {
+    text-align: center;
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: clamp(24px, 4vw, 32px);
+    color: var(--gold);
+    margin-bottom: 8px;
+    letter-spacing: 8px;
+    border: none;
+    padding: 0;
+  }
+  
+  .appendix .appendix-sub {
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 4px;
+    margin-bottom: 40px;
+  }
+  
+  .appendix-item {
+    margin-bottom: 28px;
+    padding: 20px 24px;
+    background: var(--washi);
+    border-left: 4px solid var(--gold);
+    position: relative;
+  }
+  
+  .appendix-item h3 {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    margin-bottom: 8px;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .appendix-item h3::before {
+    content: '※';
+    color: var(--gold);
+    font-size: 20px;
+  }
+  
+  .appendix-item .keyword {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 700;
+    padding: 3px 12px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin: 4px 4px 4px 0;
+  }
+  
+  .appendix-item p {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  
+  /* ========== フッター ========== */
+  footer {
+    margin-top: 80px;
+    padding: 40px 0;
+    text-align: center;
+    border-top: 1px solid var(--gray-line);
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 2px;
+  }
+  
+  footer .final-kanji {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 64px;
+    color: var(--crimson);
+    letter-spacing: 16px;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+  
+  /* 本文の段落開始のアクセント */
+  .section > p:first-of-type::first-letter {
+    font-family: 'Shippori Mincho', serif;
+    font-weight: 900;
+    font-size: 1.4em;
+    color: var(--crimson);
+  }
+  
+  /* 印刷対応 */
+  @media print {
+    body { background: white; }
+    .section { break-inside: avoid; }
+    .toc { break-after: page; }
+  }
+  
+  /* 目次の項目番号調整 */
+  @media (max-width: 768px) {
+    .section-number { font-size: 80px; opacity: 0.06; }
+    .stamp { top: 40px; right: 20px; width: 70px; height: 70px; font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+<a href="/library" onclick="if(window.history.length>1){history.back();return false;}" style="position:fixed;top:14px;left:14px;z-index:99;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:rgba(26,26,26,0.85);color:#f5ede0;text-decoration:none;border-radius:24px;font-family:'Noto Serif JP',serif;font-size:13px;backdrop-filter:blur(4px);box-shadow:0 2px 8px rgba(0,0,0,0.2);">&larr; Back</a>
+
+<div class="container">
+
+<!-- ========== Header ========== -->
+<header class="hero">
+  <div class="stamp">
+    Kyokushinkan<br>Kumite Scroll
+  </div>
+  <div class="hero-tag">K U M I T E &nbsp; S E M I N A R</div>
+  <h1>Kumite <span class="accent">Guidebook</span></h1>
+  <div class="hero-subtitle">T E C H N I Q U E &nbsp; &middot; &nbsp; M I N D &nbsp; &middot; &nbsp; B O D Y</div>
+  <div class="hero-meta">
+    <span>Theme: <strong>Technique and mindset for winning in competition</strong></span>
+    <span>Audience: <strong>Fighters, instructors, and parents</strong></span>
+    <span>Format: <strong>Q&amp;A seminar</strong></span>
+  </div>
+</header>
+
+<!-- ========== Table of Contents ========== -->
+<nav class="toc">
+  <div class="toc-title">Contents</div>
+  <ol>
+    <li><a href="#s1"><span class="num">I</span>Jodan defense and stance</a></li>
+    <li><a href="#s2"><span class="num">II</span>Lowering the hips and foot width</a></li>
+    <li><a href="#s3"><span class="num">III</span>Pre-match warm-up</a></li>
+    <li><a href="#s4"><span class="num">IV</span>Match-day nutrition strategy</a></li>
+    <li><a href="#s5"><span class="num">V</span>Closing the distance (the "tsumeshogi" mindset)</a></li>
+    <li><a href="#s6"><span class="num">VI</span>Warm-ups between matches in a tournament</a></li>
+    <li><a href="#s7"><span class="num">VII</span>Breath-hold training</a></li>
+    <li><a href="#s8"><span class="num">VIII</span>Overcoming the slow-starter problem</a></li>
+    <li><a href="#s9"><span class="num">IX</span>How to think when you're behind</a></li>
+    <li><a href="#s10"><span class="num">X</span>On being a second (corner)</a></li>
+    <li><a href="#s11"><span class="num">XI</span>Conditioning and nutrition</a></li>
+    <li><a href="#s12"><span class="num">XII</span>Handling injuries</a></li>
+    <li><a href="#s13"><span class="num">XIII</span>Tapering before a match</a></li>
+    <li><a href="#s14"><span class="num">XIV</span>Facing the judges' decision</a></li>
+  </ol>
+</nav>
+
+<!-- Chapter 1 -->
+<section class="section" id="s1">
+  <div class="section-number">I</div>
+  <h2><span class="chapter-mark">Chapter I</span>Jodan defense and stance</h2>
+
+  <p>Fighters who frequently get hit in the jodan (upper level) are almost always <strong>squaring up too directly to their opponent</strong>. From a fully frontal position, reactions to attacks from either side arrive late, and you get caught in chains of strikes.</p>
+
+  <h3>Why an angled stance matters</h3>
+
+  <p>Adding an angle to the upper body transforms defensive efficiency. In particular, <strong>attacks from the right side can almost never be landed through the pull, and straight left attacks can also be handled</strong>. The only real threat becomes the rotating left attack &mdash; and even that can be neutralized by adding your own angle.</p>
+
+  <div class="point-box">
+    <p>Rather than facing your opponent head-on, <strong>angle your body</strong>. The right-pull attack is shut down, and as long as you create your own angle against the left, you'll almost never be broken down.</p>
+  </div>
+</section>
+
+<!-- Chapter 2 -->
+<section class="section" id="s2">
+  <div class="section-number">II</div>
+  <h2><span class="chapter-mark">Chapter II</span>Lowering the hips and foot width</h2>
+
+  <p>The fundamental starting point is the standing form of kihon, but in situations where you're told to <strong>"lower your hips,"</strong> doing it wrong actually makes you easier to hit. If you press the hips down too much because you don't want to retreat, you end up stuck in place &mdash; which invites even more punches.</p>
+
+  <h3>On foot shape</h3>
+
+  <p>When the feet end up <strong>parallel, mobility collapses</strong>. Taking one foot a step out (creating an "outside" offset) widens your range of motion. Forward and backward adjustments become much easier too.</p>
+
+  <div class="point-box">
+    <p>Lowering the hips adds stability &mdash; but <strong>pressing down too hard and locking into the opponent has the opposite effect</strong>. Moving <em>with</em> a retreating opponent (staying together in motion) is better than simply retreating. And by keeping one foot offset rather than parallel, you preserve the range of motion you need.</p>
+  </div>
+</section>
+
+<!-- Chapter 3 -->
+<section class="section" id="s3">
+  <div class="section-number">III</div>
+  <h2><span class="chapter-mark">Chapter III</span>Pre-match warm-up</h2>
+
+  <p>A pre-match warm-up has two essential components: <strong>raising the heart rate</strong> and <strong>priming the nervous system</strong>. Simply "breaking a sweat" is not the goal &mdash; the warm-up has to be built systematically.</p>
+
+  <h3>Timing schedule</h3>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <span class="timeline-time">60&ndash;90 minutes before</span>
+      <div class="timeline-content">
+        <strong>Long warm-up to raise the heart rate.</strong> Perform one full-intensity round at match length (3 minutes). Picture pulling your absolute limit out of yourself, once.
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-time">30 minutes before</span>
+      <div class="timeline-content">
+        A short block (1&ndash;2 minutes) to <strong>raise the heart rate again</strong>.
+      </div>
+    </div>
+    <div class="timeline-item">
+      <span class="timeline-time">Immediately before</span>
+      <div class="timeline-content">
+        <strong>A 20-second burst to spike the heart rate.</strong> This delivers you to the line already in an optimal state.
+      </div>
+    </div>
+  </div>
+
+  <h3>Neural priming is essential</h3>
+
+  <p>Knee-lifts and shadow alone are not enough. If you don't properly <strong>fire the techniques you actually want to use (jodan roundhouse kick, etc.)</strong> through the body first, you can't just pull them out in the match. Confirming the movements you've trained is absolutely required.</p>
+
+  <div class="warning-box">
+    <div class="label">Common mistake</div>
+    <p>Many fighters only do a long warm-up on match day itself. If you usually only shadow and suddenly hit big mitts, the stimulus is excessive and leaves a strange fatigue that hurts your performance. <strong>The warm-up lives on the same spectrum as practice</strong>. Train with your warm-up routine locked in, every day.</p>
+  </div>
+
+  <div class="quote-box">A warm-up only exists as an extension of training. Don't do things on the day that you don't do every day.</div>
+</section>
+
+<!-- Chapter 4 -->
+<section class="section" id="s4">
+  <div class="section-number">IV</div>
+  <h2><span class="chapter-mark">Chapter IV</span>Match-day nutrition strategy</h2>
+
+  <h3>The night before</h3>
+
+  <p>As a baseline, <strong>getting your carbs is basically all you need</strong>. Udon, pasta, and similar foods are recommended &mdash; they become the fuel that moves your body.</p>
+
+  <ul>
+    <li>Avoid heavy/fatty foods</li>
+    <li>Don't eat to fullness</li>
+    <li><strong>Finish eating by 2 hours before sleep</strong> (for both digestion and sleep quality)</li>
+    <li>Take in a sensible amount of protein (amino acids are required). But some people digest slowly, so keep it to a portion that won't linger.</li>
+  </ul>
+
+  <h3>The morning of the match</h3>
+
+  <p><strong>One rice ball is enough.</strong> Eat something that will break down within 1&ndash;2 hours before you reach the venue. Supplement users can also take carbohydrates in powder form.</p>
+
+  <div class="point-box">
+    <p>At the venue, stick to easy-to-digest options like <strong>bananas and energy gels</strong>. Get your energy from powders or gels &mdash; the key is <strong>never entering the match with food still sitting in your stomach</strong>.</p>
+  </div>
+
+  <h3>Fueling items</h3>
+
+  <table class="pro-table">
+    <tr><th>Item</th><th>Characteristic</th><th>How to use</th></tr>
+    <tr><td>Rice ball (onigiri)</td><td>Morning carb source</td><td>One on the morning of the match</td></tr>
+    <tr><td>Banana</td><td>Digests quickly</td><td>Refueling at the venue</td></tr>
+    <tr><td>Energy gel</td><td>Absorbs immediately</td><td>Refueling just before the match</td></tr>
+    <tr><td>Powdered carbs (maltodextrin, etc.)</td><td>Mix with water and drink</td><td>Hydration + energy throughout the day</td></tr>
+  </table>
+
+  <div class="quote-box">The best test: eat your pre-match dinner the night before, then do a training session of match intensity. See how your body handles it.</div>
+</section>
+
+<!-- Chapter 5 -->
+<section class="section" id="s5">
+  <div class="section-number">V</div>
+  <h2><span class="chapter-mark">Chapter V</span>Closing the distance (the "tsumeshogi" mindset)</h2>
+
+  <p>How to attack an opponent who keeps their distance and runs. Swinging for a home run on the very first attempt is not the right approach.</p>
+
+  <h3>Step 1: Just touching is fine</h3>
+
+  <p>The first attempt can be <strong>a feint, or even just a light "touch"</strong>. Change your mental model to: the <em>second</em> strike is the one that actually lands. This dramatically expands your entry options.</p>
+
+  <h3>Use the size of the match area (tsumeshogi = chess-like problem-solving)</h3>
+
+  <p>The competition area is roughly a 7m &times; 7m square. How you move once you've pushed the opponent to the edge is decisive.</p>
+
+  <div class="point-box">
+    <p>Moving sideways has the effect of <strong>blocking the opponent's escape routes</strong>. If they circle right, you circle right; if they circle left, you circle left. Keep doing this and their options disappear. <strong>The attacker erases escape paths the way a tsumeshogi problem erases the king's squares.</strong></p>
+  </div>
+
+  <div class="quote-box">First strike: just touch. Second strike: finish. Fight with the tsumeshogi mindset.</div>
+</section>
+
+<!-- Chapter 6 -->
+<section class="section" id="s6">
+  <div class="section-number">VI</div>
+  <h2><span class="chapter-mark">Chapter VI</span>Warm-ups between matches in a tournament</h2>
+
+  <h3>Adjust by match interval</h3>
+
+  <table class="pro-table">
+    <tr><th>Interval</th><th>Warm-up content</th></tr>
+    <tr><td>15&ndash;30 min</td><td>Re-confirm movement, loosen the body only</td></tr>
+    <tr><td>2&ndash;3 hours or more</td><td>Full warm-up again, same as the day's first one (heart-rate spike via 3-minute match simulation)</td></tr>
+  </table>
+
+  <h3>Overseas / large time gaps</h3>
+
+  <p>In overseas competitions matches can slip to day two, and operational variability is normal. <strong>Predict the minimum time from your match number</strong> (number &times; minutes per match).</p>
+
+  <h3>Preparation after advancing</h3>
+
+  <ul>
+    <li><strong>Record video of other fighters in your bracket</strong> and analyze them</li>
+    <li>Identify the opponent's habits and rehearse your response in your head</li>
+    <li>Rehearse all scenarios: "if they do this, I do that"</li>
+    <li>Keep the heart rate up via warm-ups, but without accumulating fatigue</li>
+  </ul>
+
+  <p>Going into a match having fought more rounds than your opponent is a disadvantage. The key is to build a state where <strong>you can spike the heart rate quickly without carrying residual fatigue</strong>.</p>
+</section>
+
+<!-- Chapter 7 -->
+<section class="section" id="s7">
+  <div class="section-number">VII</div>
+  <h2><span class="chapter-mark">Chapter VII</span>Breath-hold training</h2>
+
+  <p>A specialized method for the between-match scenario: raising the heart rate in a very short time. <strong>Put the lungs under anaerobic, non-ventilated stimulus.</strong></p>
+
+  <h3>How to do it</h3>
+
+  <p>Exhale completely, go full intensity for 5 seconds, rest for 5 seconds. Six rounds &asymp; one minute total. Useful as a short warm-up between matches.</p>
+
+  <h3>Example movements</h3>
+
+  <ul>
+    <li><strong>Knee-lift sprint in place</strong> (the most basic option)</li>
+    <li>Full-intensity shadow</li>
+    <li>Move both arms and legs in their full range</li>
+  </ul>
+
+  <div class="warning-box">
+    <div class="label">Caution</div>
+    <p>Blood pressure can spike, so <strong>avoid this if you have high blood pressure</strong>. A match contains many non-breathing moments, so this drill also serves as adaptation training. An aerobic version (full intensity with breath) also has its own benefits.</p>
+  </div>
+</section>
+
+<!-- Chapter 8 -->
+<section class="section" id="s8">
+  <div class="section-number">VIII</div>
+  <h2><span class="chapter-mark">Chapter VIII</span>Overcoming the slow-starter problem</h2>
+
+  <p>Strategies for fighters who can't move at full intensity from the opening bell. The honest answer: <strong>a lot of it is personality and innate wiring, and a complete "fix" is difficult</strong>. But strategy can cover the gap.</p>
+
+  <h3>Strategy 1: Disrupt the opening</h3>
+
+  <p>The instant the match begins, <strong>do something the opponent hates</strong>, or create a situation where they can't do anything. For example: one backstep on the start, then move laterally. Break their opening plan on the first motion.</p>
+
+  <h3>Strategy 2: Pull them into tsumeshogi</h3>
+
+  <p>Don't let them fight at their tempo. <strong>Drag them onto your ring</strong>. Once they're on your terms, the slow-starter disadvantage largely disappears.</p>
+
+  <h3>Strategy 3: Offset the starting line position</h3>
+
+  <p>Don't stand right on the line &mdash; stand slightly back, which <strong>throws off the opponent's sense of distance</strong> (within what the rules allow).</p>
+
+  <div class="point-box">
+    <p>The single most important thing is to <strong>know in advance that you are a slow starter</strong>. Panicking mid-match with "my body won't move" creates a vicious cycle. Calmly acknowledging "I'm a slow starter, so here's my plan" prevents panic-induced stiffness.</p>
+  </div>
+
+  <div class="quote-box">If they come out firing, you don't need to wait. Move first.</div>
+</section>
+
+<!-- Chapter 9 -->
+<section class="section" id="s9">
+  <div class="section-number">IX</div>
+  <h2><span class="chapter-mark">Chapter IX</span>How to think when you're behind</h2>
+
+  <h3>The "give up the first 2 seconds" idea</h3>
+
+  <p>When you get hit hard early, <strong>panicking and looping on "what do I do, what do I do" is a vicious cycle</strong>. Adopt instead a "2-second write-off" approach.</p>
+
+  <h3>Three things to do in the 2 seconds you've lost</h3>
+
+  <ul>
+    <li>Think about how to take back 3 seconds with the next 3 seconds</li>
+    <li>Listen to the corner's voice</li>
+    <li>Stop completely (freeze the motion)</li>
+  </ul>
+
+  <p>If you can then reclaim 3 seconds, the net difference is <strong>&minus;2 + 3 = +1 second</strong> of lead, built up repeatedly. Continue that pattern and you win.</p>
+
+  <div class="point-box">
+    <p>Combat sports are like baseball: you don't hit a home run every plate. Home runs and strikeouts both sit on the same continuum with base hits. The worst thing panic causes is <strong>thinking stoppage</strong>. Separate the fact "I'm being hit" from the question "how do I recover," and keep thinking about the <strong>next move</strong> at all times.</p>
+  </div>
+</section>
+
+<!-- Chapter 10 -->
+<section class="section" id="s10">
+  <div class="section-number">X</div>
+  <h2><span class="chapter-mark">Chapter X</span>On being a second (corner)</h2>
+
+  <p>The second (corner) is not just a cheerleader. They are a <strong>strategic partner who can decide the outcome of a match</strong>. Without proper knowledge and experience, a second can actually be a net negative.</p>
+
+  <h3>Traits of a good second</h3>
+
+  <ul>
+    <li>Has karate knowledge</li>
+    <li>Reads the flow of the match</li>
+    <li>Understands the fighter's strengths and weaknesses</li>
+    <li>Makes good situational judgments</li>
+  </ul>
+
+  <h3>Instructions to avoid</h3>
+
+  <table class="pro-table">
+    <tr><th>NG pattern</th><th>Why it fails</th><th>Alternative</th></tr>
+    <tr><td>"Go! Go!"</td><td>Zero specificity. The fighter is already stuck; that's why they're not going.</td><td>Direction: "Circle from the right," "switch on the left"</td></tr>
+    <tr><td>"Show them that move from before!"</td><td>The fighter can't identify which moment</td><td>Specific technique name or scenario</td></tr>
+    <tr><td>Too many seconds</td><td>Multiple voices, different instructions &rarr; the fighter is confused</td><td>Narrow to a single instructing voice</td></tr>
+    <tr><td>Skipping steps</td><td>Calling the finishing technique directly won't land</td><td>Position &rarr; setup &rarr; finish, in order</td></tr>
+    <tr><td>Complaints about the opponent ("Don't drop your guard" etc.)</td><td>Creates a bad impression with the judges</td><td>Convert to positive instructions for your fighter</td></tr>
+  </table>
+
+  <h3>The ideal instruction build (ABCD layering)</h3>
+
+  <p>Cooking follows the sequence "seasoning &rarr; prep &rarr; main dish." Match instructions should work the same way: layer positional setup, then setup attack, then finish.</p>
+
+  <div class="point-box">
+    <p>If parents are cornering, we strongly recommend <strong>actually trying karate practice at the dojo once</strong>. Understanding the fighter's feelings and situations deeply improves instruction quality.</p>
+  </div>
+
+  <h3>The fighter's side</h3>
+
+  <ul>
+    <li><strong>Practice listening to the corner</strong> (train reacting to instructions during regular kumite and bag work)</li>
+    <li>Pre-match agreement with your second &mdash; <strong>"When X happens, tell me Y"</strong> &mdash; is fine and recommended</li>
+    <li>If your second will be absent, pre-arrange who gives instructions to the substitute</li>
+  </ul>
+</section>
+
+<!-- Chapter 11 -->
+<section class="section" id="s11">
+  <div class="section-number">XI</div>
+  <h2><span class="chapter-mark">Chapter XI</span>Conditioning and nutrition</h2>
+
+  <div class="warning-box">
+    <div class="label">Absolute rule</div>
+    <p><strong>Do not cut weight before age 20.</strong> The growth period does not come back in your life. Eating properly to grow through this phase pays off many times more over a lifetime in karate than shedding a few kilos to enter a weight-class tournament.</p>
+  </div>
+
+  <h3>Principles for growing bigger</h3>
+
+  <p>Growth absolutely requires nutrition. <strong>Your body cannot create nutrients &mdash; it must take them in</strong>. Increase food volume gradually (the same principle of progressive overload used in training).</p>
+
+  <p>Carry the mindset that <strong>bigger is stronger</strong>. Who wins between an elephant and a dog? Same question. Between heavyweight and lightweight in an open fight, the heavyweight usually has the edge. Prioritize combat strength over an aesthetic preference for being "lean."</p>
+
+  <h3>Training for juniors</h3>
+
+  <ul>
+    <li>Push-ups, squats, and object-load training &mdash; <strong>bodyweight work is basically fine</strong> (watch only the volume)</li>
+    <li>To grow bones: <strong>jumping and impact-type training</strong> (for bone density)</li>
+    <li>Light dumbbells (~5 kg) and kettlebells are acceptable</li>
+    <li>Avoid heavy squats (100&ndash;200 kg)</li>
+    <li>Top priority: <strong>training that lets you express your own 100%</strong> (full-swing drills, etc.)</li>
+  </ul>
+
+  <h3>Correct body mechanics are the prerequisite</h3>
+
+  <p>Movement beyond joint range of motion leads to injury. Absolutely avoid a bent wrist on the punch, or unnatural knee and hip motion. <strong>Basic functional anatomy</strong> is knowledge that coaches and parents should carry too.</p>
+
+  <div class="quote-box">Those who can't express their own 100% don't know the range they can actually handle. That is the root of injury.</div>
+</section>
+
+<!-- Chapter 12 -->
+<section class="section" id="s12">
+  <div class="section-number">XII</div>
+  <h2><span class="chapter-mark">Chapter XII</span>Handling injuries</h2>
+
+  <h3>From the old RICE method to the new PEACE &amp; LOVE</h3>
+
+  <p>The old orthodoxy of <strong>RICE (Rest, Ice, Compression, Elevation)</strong> is shifting. The current mainstream framework is <strong>PEACE &amp; LOVE</strong>, and <strong>complete rest until pain disappears is now considered counterproductive</strong>.</p>
+
+  <h3>Immediately after the injury (first 2&ndash;3 days)</h3>
+
+  <p>The inflammatory phase. Center your care on cooling (ice/compresses) and <strong>keep things relatively still</strong>.</p>
+
+  <h3>After the acute phase</h3>
+
+  <p><strong>Begin moving the area within the pain-free range</strong> &mdash; and actively go into "slightly painful" territory. Letting blood flow carry nutrients to the site speeds healing.</p>
+
+  <h3>Rehabilitation phase</h3>
+
+  <p>Move the area with correct mechanics, and actively maintain joint function, muscle function, and neural function.</p>
+
+  <div class="warning-box">
+    <div class="label">The danger of doing nothing</div>
+    <p>If you fully rest until the pain is gone, <strong>joint, muscle, and neural function are much more likely to be lost</strong>. Delayed rehabilitation equals delayed recovery.</p>
+  </div>
+
+  <p><em>Note: growing pains and sports injuries are handled differently. For juniors, always consult a specialist for assessment.</em></p>
+</section>
+
+<!-- Chapter 13 -->
+<section class="section" id="s13">
+  <div class="section-number">XIII</div>
+  <h2><span class="chapter-mark">Chapter XIII</span>Tapering before a match</h2>
+
+  <h3>Basic framework</h3>
+
+  <p>One common pattern: place the hardest training peak 2 weeks before the match, then gradually wash out the fatigue from there. However, <strong>fatigue clearance speed and peaking approach vary by individual</strong>, so you have to find your own formula.</p>
+
+  <h3>Preparation style by fighter type</h3>
+
+  <table class="pro-table">
+    <tr><th>Type</th><th>Characteristic</th><th>Preparation method</th></tr>
+    <tr><td>ABCD pattern type</td><td>Changes strategy based on the opponent</td><td>Prepare several scenario patterns and drill them</td></tr>
+    <tr><td>Core-style type</td><td>Drives their own fight style all the way through</td><td>Lock in 1&ndash;2 core patterns and polish variations within them</td></tr>
+  </table>
+
+  <p>Fighters with good body mechanics who can control their nerves suit the "many-pattern" approach. Those who tend to panic and want to keep things fixed suit the "core-style" approach. Understand which you are, then prepare accordingly.</p>
+
+  <h3>Tips on tapering</h3>
+
+  <ul>
+    <li>Whether to carry hard training until 1 week out, or fully wash out from 2 weeks out &mdash; individual variation</li>
+    <li>Experiment with how you "finish" for each match and build your correct answer over time</li>
+    <li><strong>Keep spiking the heart rate right up to match time</strong> (without leaving fatigue behind)</li>
+  </ul>
+</section>
+
+<!-- Chapter 14 -->
+<section class="section" id="s14">
+  <div class="section-number">XIV</div>
+  <h2><span class="chapter-mark">Chapter XIV</span>Facing the judges' decision</h2>
+
+  <p>On questions about fouls like groin strikes and judging errors. The fundamental premise: <strong>the person judging is final &mdash; a fighter cannot overturn that</strong>.</p>
+
+  <h3>The concept of "entrusting"</h3>
+
+  <p>The moment you step onto the match area, you have <strong>entrusted judgment to the referee</strong>. The bow before and after the match is an expression of gratitude and trust toward the venue, the organizers, and the referees. The chief referee has also taken on that role with full commitment.</p>
+
+  <div class="point-box">
+    <p>You entrusted it to the referee &mdash; so accept the result. That is budo.</p>
+  </div>
+
+  <h3>If you were the one on the "gray" side</h3>
+
+  <p>Reflect on the gray action, and <strong>switch mentally toward winning cleanly next time</strong>. Polish the technique of not winning by gray margins, and the technique of not letting the opponent hit you in gray ways.</p>
+
+  <h3>If you were the one on the receiving side</h3>
+
+  <ul>
+    <li>If the referee ruled "no foul," switch mentally and move on</li>
+    <li>In ambiguous situations, respect the referee's judgment</li>
+    <li>Rather than protesting directly yourself, have your second raise it</li>
+  </ul>
+
+  <div class="quote-box">"Don't take the groin shot." "Don't take the leg kick." These too are techniques. <strong>Not taking the hit is the strongest form</strong>. True victory is winning with a margin so clear that the referee never has to hesitate.</div>
+</section>
+
+<!-- Closing -->
+<section class="section" id="closing">
+  <div class="section-number">&middot;</div>
+  <h2><span class="chapter-mark">In Closing</span>On this seminar</h2>
+
+  <p>Everything above is a reconstruction of the questions and answers raised during the 14-chapter live Q&amp;A session. Take what resonates with your current stage as a fighter or coach, and fold it into daily training.</p>
+
+  <div class="quote-box">Technique, mind, and body &mdash; always as one. Win cleanly.</div>
+</section>
+
+</div>
+
+</body>
+</html>
