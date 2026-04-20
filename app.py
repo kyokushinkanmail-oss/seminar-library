@@ -2017,8 +2017,13 @@ def shop_material(material_id):
         ).first()
         accessible = bool(attended or purchased or material.is_free)
 
-    toc = _extract_toc_from_html(material.content_html or "", max_items=16)
-    preview = _extract_preview_text(material.content_html or "", max_chars=260)
+    # i18n: 英語モードでは content_html_en / title_en を優先
+    lang = get_current_lang()
+    src_html = material.content_html or ''
+    if lang == 'en' and getattr(material, 'content_html_en', None):
+        src_html = material.content_html_en
+    toc = _extract_toc_from_html(src_html, max_items=16)
+    preview = _extract_preview_text(src_html, max_chars=260)
 
     return render_template(
         "shop_material.html",

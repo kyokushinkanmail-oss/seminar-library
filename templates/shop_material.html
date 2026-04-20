@@ -14,14 +14,16 @@
     <div style="background:linear-gradient(135deg,#1a1a1a,#2d2d2d); color:#f5ede0; padding:24px 20px; border-radius:14px; margin-bottom:18px; box-shadow:0 4px 14px rgba(0,0,0,0.15); position:relative; overflow:hidden;">
         <div style="position:absolute; top:0; left:0; width:4px; height:100%; background:linear-gradient(180deg,#a8201a,#c9a227);"></div>
         <p style="font-size:11px; letter-spacing:2px; color:#c9a227; margin:0 0 6px;">
-            {{ seminar.date_display }}
+            {% if lang == 'en' %}{{ seminar.date_display_en }}{% else %}{{ seminar.date_display }}{% endif %}
         </p>
         <h1 style="font-size:1.3rem; font-weight:900; margin:0 0 8px; line-height:1.4;">
             {% if lang == 'en' and material.title_en %}{{ material.title_en }}{% else %}{{ material.title }}{% endif %}
         </h1>
+        {% if lang != 'en' %}
         <p style="font-size:0.85rem; opacity:0.8; margin:0;">{{ seminar.title }}</p>
         {% if seminar.subtitle %}
         <p style="font-size:0.8rem; opacity:0.65; margin:4px 0 0;">{{ seminar.subtitle }}</p>
+        {% endif %}
         {% endif %}
     </div>
 

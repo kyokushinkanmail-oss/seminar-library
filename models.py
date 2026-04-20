@@ -50,6 +50,16 @@ class Seminar(db.Model):
         return f"{self.date.year}年{self.date.month}月{self.date.day}日（{wd}）"
 
     @property
+    def date_display_en(self):
+        months = ["January", "February", "March", "April", "May", "June",
+                  "July", "August", "September", "October", "November", "December"]
+        weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday",
+                    "Friday", "Saturday", "Sunday"]
+        m = months[self.date.month - 1]
+        wd = weekdays[self.date.weekday()]
+        return f"{m} {self.date.day}, {self.date.year} ({wd})"
+
+    @property
     def instructor_list(self):
         return [i.strip() for i in self.instructors.split(",") if i.strip()]
 

@@ -12,9 +12,9 @@
 <div class="material-viewer">
     <!-- 資料ヘッダー -->
     <div style="background:#fef2f2; border:2px solid #fca5a5; border-radius:16px; padding:18px; margin-bottom:24px;">
-        <p class="seminar-date">{{ seminar.date_display }}</p>
+        <p class="seminar-date">{% if lang == "en" %}{{ seminar.date_display_en }}{% else %}{{ seminar.date_display }}{% endif %}</p>
         <h1 style="font-size:1.3rem; font-weight:900; margin-bottom:4px;">{% if lang == 'en' and material.title_en %}{{ material.title_en }}{% else %}{{ material.title }}{% endif %}</h1>
-        <p class="text-muted" style="font-size:0.85rem;">{{ seminar.title }} — {{ seminar.subtitle }}</p>
+        {% if lang != "en" %}<p class="text-muted" style="font-size:0.85rem;">{{ seminar.title }} — {{ seminar.subtitle }}</p>{% endif %}
 
         {% if slide_info %}
         <p class="text-muted" style="font-size:0.82rem; margin-top:14px; line-height:1.55;">
@@ -91,7 +91,7 @@
     </style>
     <div class="slide-carousel-wrap">
         <div class="slide-carousel-bar">
-            <span>📑 スライド資料</span>
+            <span>📑 {% if lang == "en" %}Slides{% else %}スライド資料{% endif %}</span>
             <span><span id="slide-pos">1</span> / {{ slide_info.count }}</span>
         </div>
         <div class="slide-carousel-track" id="slide-viewer">
