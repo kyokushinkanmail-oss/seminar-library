@@ -110,6 +110,17 @@ TRANSLATIONS = {
     "material_preparing": {"ja": "準備中", "en": "Coming soon"},
     "material_premium_notice": {"ja": "この資料は有料コンテンツです", "en": "This is premium content"},
 
+    # セミナー詳細
+    "seminar_detail_title": {"ja": "セミナー詳細", "en": "Seminar Details"},
+    "seminar_materials_section": {"ja": "セミナー資料", "en": "Seminar Materials"},
+    "seminar_videos_section": {"ja": "セミナー動画", "en": "Seminar Videos"},
+    "html_browse": {"ja": "HTML形式 — ブラウザで閲覧", "en": "HTML — view in browser"},
+    "zoom_free_videos": {"ja": "Zoom参加者のため全動画を無料で視聴できます", "en": "All videos free for Zoom participants"},
+    "participants_only": {"ja": "参加者限定", "en": "Participants only"},
+    "materials_pending": {"ja": "資料は準備中です", "en": "Materials coming soon"},
+    "view_btn": {"ja": "閲覧", "en": "View"},
+    "watch_btn": {"ja": "視聴", "en": "Watch"},
+
     # 管理画面（最小限）
     "admin_dashboard_title": {"ja": "管理ダッシュボード", "en": "Admin Dashboard"},
 }
