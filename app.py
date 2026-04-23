@@ -2059,6 +2059,8 @@ def admin_view_material(material_id):
         material=material,
         seminar=seminar,
         slide_info=slide_info,
+        back_url=url_for("admin_dashboard", key=admin_key),
+        back_label="管理ダッシュボードに戻る",
     )
 
 

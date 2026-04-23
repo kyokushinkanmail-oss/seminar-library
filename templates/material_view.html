@@ -4,7 +4,7 @@
 {% block body %}
 <div class="header">
     <div class="header-inner">
-        <a href="{{ url_for('seminar_detail', seminar_id=seminar.id) }}" class="btn-back">← {{ t('back') }}</a>
+        <a href="{{ back_url or url_for('seminar_detail', seminar_id=seminar.id) }}" class="btn-back">← {{ t('back') }}</a>
         <span class="header-title">{% if lang == 'en' %}Material{% else %}資料閲覧{% endif %}</span>
     </div>
 </div>
@@ -153,8 +153,8 @@
     <!-- フッター -->
     <div style="margin-top:40px; padding-top:20px; border-top:2px solid #e5e5e5; text-align:center;">
         <p class="text-muted text-sm">{{ t('app_title') }}</p>
-        <a href="{{ url_for('seminar_detail', seminar_id=seminar.id) }}" class="btn btn-outline btn-sm mt-2">
-            {% if lang == 'en' %}Back to seminar{% else %}セミナー詳細に戻る{% endif %}
+        <a href="{{ back_url or url_for('seminar_detail', seminar_id=seminar.id) }}" class="btn btn-outline btn-sm mt-2">
+            {% if back_label %}{{ back_label }}{% elif lang == 'en' %}Back to seminar{% else %}セミナー詳細に戻る{% endif %}
         </a>
     </div>
 </div>
