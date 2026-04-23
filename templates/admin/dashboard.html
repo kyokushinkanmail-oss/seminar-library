@@ -46,6 +46,8 @@
                     <span style="font-size:0.82rem; color:#1f2937; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                         {{ m.title }}
                     </span>
+                    <a href="{{ url_for('admin_view_material', material_id=m.id, key=request.args.get('key','')) }}"
+                       class="btn btn-red btn-sm" style="white-space:nowrap;">閲覧</a>
                     <a href="{{ url_for('admin_material_qr', material_id=m.id, key=request.args.get('key','')) }}"
                        class="btn btn-outline btn-sm" style="white-space:nowrap;">QR</a>
                     <a href="{{ url_for('admin_edit_material', material_id=m.id, key=request.args.get('key','')) }}"

@@ -2036,6 +2036,32 @@ def shop_material(material_id):
     )
 
 
+@app.route("/admin/material/<int:material_id>/view")
+def admin_view_material(material_id):
+    """管理画面から資料本文を閲覧（出席・購入チェックをバイパス）"""
+    admin_key = request.args.get("key", "") or ""
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    material = Material.query.get_or_404(material_id)
+    seminar = Seminar.query.get(material.seminar_id)
+
+    slide_config_map = {
+        "positioning": {"dir": "slides", "count": 20},
+        "kinni": {"dir": "slides_kinni", "count": 16},
+    }
+    slide_info = None
+    if material.file_path:
+        stem = os.path.splitext(os.path.basename(material.file_path))[0]
+        slide_info = slide_config_map.get(stem)
+
+    return render_template(
+        "material_view.html",
+        material=material,
+        seminar=seminar,
+        slide_info=slide_info,
+    )
+
+
 @app.route("/admin/material/<int:material_id>/edit", methods=["GET", "POST"])
 def admin_edit_material(material_id):
     """資料の価格・Stripe Payment Link を編集"""
