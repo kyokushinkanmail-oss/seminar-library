@@ -16,7 +16,6 @@ class User(db.Model):
     phone_last4 = db.Column(db.String(4))  # 表示用
     email = db.Column(db.String(255), nullable=True)
     is_subscriber = db.Column(db.Boolean, default=False)  # 添削サブスク
-    stripe_customer_id = db.Column(db.String(255), nullable=True)
     remember_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # PWA自動再ログイン用
     language = db.Column(db.String(5), default="ja")  # 表示言語: ja / en
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -95,7 +94,6 @@ class Material(db.Model):
     file_path = db.Column(db.String(500))  # 元ファイル（PDFなど）のパス
     is_free = db.Column(db.Boolean, default=False)  # 出席者以外にも無料公開
     price = db.Column(db.Integer, default=0)  # 非出席者向け価格（0 = 非売品）
-    stripe_payment_link = db.Column(db.String(500))
     square_checkout_url = db.Column(db.String(500))  # Square Online Checkout Link
     sort_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -115,7 +113,6 @@ class Video(db.Model):
     video_url = db.Column(db.String(500))  # 埋め込みURL（Vimeo等）
     thumbnail_url = db.Column(db.String(500))
     price = db.Column(db.Integer, default=500)  # 非Zoom参加者向け価格
-    stripe_payment_link = db.Column(db.String(500))
     sort_order = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -133,7 +130,6 @@ class Purchase(db.Model):
     item_type = db.Column(db.String(20), nullable=False)  # video / material / subscription
     amount = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(20), default="pending")  # pending / completed / refunded
-    stripe_session_id = db.Column(db.String(255))
     square_order_id = db.Column(db.String(255))  # Square側のorder/payment ID
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime)
