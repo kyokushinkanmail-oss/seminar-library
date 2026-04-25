@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}{{ seminar.title }} シート同期 — 管理画面{% endblock %}
+
+{% block body %}
+<div class="header">
+    <div class="header-inner">
+        <a href="{{ url_for('admin_dashboard', key=key) }}" class="btn-back">← 戻る</a>
+        <span class="header-title">シート同期</span>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div style="background:#fef2f2; border:2px solid #fca5a5; border-radius:12px; padding:14px 16px; margin-bottom:20px;">
+        <p class="seminar-date" style="font-size:0.85rem;">{{ seminar.date_display }}</p>
+        <h1 style="font-size:1.15rem; font-weight:900; margin-bottom:2px;">{{ seminar.title }}</h1>
+        <p class="text-muted" style="font-size:0.85rem;">
+            QRを読めなかった参加者向け。Googleシート(参加申込)からメール／氏名+支部名で照合し、Material単位で資料を付与します。
+        </p>
+    </div>
+
+    <h2 style="font-size:1.05rem; font-weight:900; margin:18px 0 8px;">資料一覧（参考: マッピング用ID）</h2>
+    {% if materials %}
+    <table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-bottom:18px;">
+        <thead>
+            <tr style="background:#f3f4f6;">
+                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid #d1d5db;">ID</th>
+                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid #d1d5db;">タイトル</th>
+                <th style="text-align:left; padding:6px 8px; border-bottom:1px solid #d1d5db;">ファイル</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in materials %}
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:6px 8px; font-family:monospace;">{{ m.id }}</td>
+                <td style="padding:6px 8px;">{{ m.title }}</td>
+                <td style="padding:6px 8px; color:#6b7280;">{{ m.file_path or '—' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted" style="margin-bottom:18px;">このセミナーには資料が登録されていません。</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('admin_sheet_config', seminar_id=seminar.id, key=key) }}">
+        <input type="hidden" name="key" value="{{ key }}">
+
+        <div class="form-group">
+            <label class="form-label">CSV URL（Googleシートの export?format=csv または publish CSV）</label>
+            <input type="url" name="csv_url" class="form-input" required
+                   placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
+                   value="{{ src.csv_url if src else '' }}">
+            <p class="text-muted" style="font-size:0.78rem; margin:4px 0 0;">
+                シートは「リンクを知っている全員が閲覧」状態にしておく必要があります。
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">参加講座 → 資料 マッピング（1行 = 「シートの値 | Material ID または ALL」）</label>
+            <textarea name="class_map" class="form-input" rows="6" style="font-family:monospace; font-size:0.9rem;"
+                      placeholder="Full-day participation | ALL&#10;Positioning &amp; Knee/Elbow classes | 12">{{ map_text_default }}</textarea>
+            <p class="text-muted" style="font-size:0.78rem; margin:4px 0 0;">
+                ALL = そのセミナー全Material（=出席扱い）。複数Materialにヒットさせたい場合は同じ class_value を複数行書けばOK。
+            </p>
+        </div>
+
+        <button type="submit" class="btn btn-red">設定を保存</button>
+    </form>
+
+    <hr style="margin:24px 0; border:none; border-top:1px solid #e5e7eb;">
+
+    <h2 style="font-size:1.05rem; font-weight:900; margin-bottom:8px;">同期実行</h2>
+    {% if src and src.csv_url %}
+    <form method="POST" action="{{ url_for('admin_sheet_sync', seminar_id=seminar.id, key=key) }}" style="margin-bottom:12px;">
+        <input type="hidden" name="key" value="{{ key }}">
+        <button type="submit" class="btn btn-red">今すぐシートを同期</button>
+    </form>
+    {% else %}
+    <p class="text-muted" style="margin-bottom:12px;">CSV URL を保存してから同期を実行してください。</p>
+    {% endif %}
+
+    {% if last_result %}
+    <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:8px; padding:10px 12px; font-size:0.88rem;">
+        <p style="font-weight:700; margin:0 0 4px;">前回の同期結果
+            {% if src and src.last_synced_at %}
+                <span class="text-muted" style="font-weight:400; font-size:0.78rem;">({{ src.last_synced_at.strftime('%Y-%m-%d %H:%M') }} UTC)</span>
+            {% endif %}
+        </p>
+        <ul style="list-style:none; margin:0; padding:0;">
+            <li>取得: {{ last_result.fetched }} 行</li>
+            <li>マッチ: {{ last_result.matched }} / 付与: {{ last_result.granted }} / 出席追加: {{ last_result.attended_added }}</li>
+            <li>未マッチ(pending): {{ last_result.pending }} / 未定義講座: {{ last_result.unknown_class }}</li>
+            {% if last_result.errors %}
+            <li style="color:#b91c1c;">エラー: {{ last_result.errors | join(' / ') }}</li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <hr style="margin:24px 0; border:none; border-top:1px solid #e5e7eb;">
+
+    <h2 style="font-size:1.05rem; font-weight:900; margin-bottom:8px;">未マッチ参加者（{{ pending|length }}名）</h2>
+    <p class="text-muted" style="font-size:0.85rem; margin-bottom:8px;">
+        ユーザー登録がまだの方。本人が電話番号で新規登録すると、氏名+支部名（または任意で入れたメール）で自動マッチして資料が紐づきます。
+    </p>
+    {% if pending %}
+    <table style="width:100%; border-collapse:collapse; font-size:0.88rem;">
+        <thead>
+            <tr style="background:#fef9c3;">
+                <th style="text-align:left; padding:6px 8px;">支部</th>
+                <th style="text-align:left; padding:6px 8px;">氏名</th>
+                <th style="text-align:left; padding:6px 8px;">メール</th>
+                <th style="text-align:left; padding:6px 8px;">参加講座</th>
+                <th style="text-align:left; padding:6px 8px;">取込日時</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in pending %}
+            <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:6px 8px;">{{ p.branch_name or '—' }}</td>
+                <td style="padding:6px 8px; font-weight:700;">{{ p.name }}</td>
+                <td style="padding:6px 8px; font-family:monospace; font-size:0.82rem;">{{ p.email or '—' }}</td>
+                <td style="padding:6px 8px;">{{ p.class_value or '—' }}</td>
+                <td style="padding:6px 8px; color:#6b7280; font-size:0.8rem;">
+                    {{ p.imported_at.strftime('%m/%d %H:%M') if p.imported_at else '—' }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="text-muted">未マッチはありません。</p>
+    {% endif %}
+</div>
+{% endblock %}

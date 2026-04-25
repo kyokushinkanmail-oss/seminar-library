@@ -59,6 +59,18 @@
             <input type="tel" name="phone" class="form-input" placeholder="090-1234-5678" required autocomplete="tel">
         </div>
 
+        {% if is_new %}
+        <div class="form-group">
+            <label class="form-label">
+                {% if lang == 'en' %}Email (optional){% else %}メールアドレス（任意）{% endif %}
+            </label>
+            <input type="email" name="email" class="form-input" placeholder="example@example.com" autocomplete="email">
+            <p class="text-muted" style="font-size:0.78rem; margin:4px 0 0;">
+                {% if lang == 'en' %}If you registered for the seminar via the form, entering the same email auto-links your records.{% else %}申込みフォームと同じメールを入れると、参加した講座の資料が自動でライブラリに紐づきます。{% endif %}
+            </p>
+        </div>
+        {% endif %}
+
         <button type="submit" class="btn btn-red btn-block mt-4">
             {% if is_new %}{{ t('register_submit') }}{% else %}{{ t('login_submit') }}{% endif %}
         </button>

@@ -8,6 +8,9 @@ db = SQLAlchemy()
 
 def init_db(app):
     """テーブル作成"""
-    from models import User, Seminar, Attendance, Purchase, Material, Video
+    from models import (
+        User, Seminar, Attendance, Purchase, Material, Video,
+        SheetSource, SheetClassMaterialMap, MaterialGrant, SheetPendingEntry,
+    )
     with app.app_context():
         db.create_all()

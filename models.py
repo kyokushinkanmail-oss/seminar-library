@@ -135,3 +135,68 @@ class Purchase(db.Model):
     completed_at = db.Column(db.DateTime)
 
     user = db.relationship("User", back_populates="purchases")
+
+
+class SheetSource(db.Model):
+    """セミナー毎のGoogleシート設定（参加者リスト同期元）"""
+    __tablename__ = "sheet_sources"
+
+    id = db.Column(db.Integer, primary_key=True)
+    seminar_id = db.Column(db.Integer, db.ForeignKey("seminars.id"), unique=True, nullable=False)
+    csv_url = db.Column(db.Text, nullable=False)
+    last_synced_at = db.Column(db.DateTime)
+    last_result_json = db.Column(db.Text)
+
+
+class SheetClassMaterialMap(db.Model):
+    """シートの「参加講座」値 → 付与する Material のマッピング。
+    material_id が NULL の行は「そのセミナーの全 Material」を意味する（=出席扱い）。"""
+    __tablename__ = "sheet_class_material_maps"
+
+    id = db.Column(db.Integer, primary_key=True)
+    seminar_id = db.Column(db.Integer, db.ForeignKey("seminars.id"), nullable=False, index=True)
+    class_value = db.Column(db.String(255), nullable=False)
+    material_id = db.Column(db.Integer, db.ForeignKey("materials.id"), nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("seminar_id", "class_value", "material_id",
+                            name="uq_sheet_class_material"),
+    )
+
+
+class MaterialGrant(db.Model):
+    """Material 単位の閲覧権（Attendance とは独立。シート同期や手動付与で使う）"""
+    __tablename__ = "material_grants"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
+    material_id = db.Column(db.Integer, db.ForeignKey("materials.id"), nullable=False)
+    seminar_id = db.Column(db.Integer, db.ForeignKey("seminars.id"), nullable=False, index=True)
+    granted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    source = db.Column(db.String(20), default="sheet")  # sheet / manual
+
+    __table_args__ = (
+        db.UniqueConstraint("user_id", "material_id", name="uq_user_material_grant"),
+    )
+
+
+class SheetPendingEntry(db.Model):
+    """同期時にまだ User がいなかったシート行。register/login 時に再マッチして消化する。"""
+    __tablename__ = "sheet_pending_entries"
+
+    id = db.Column(db.Integer, primary_key=True)
+    seminar_id = db.Column(db.Integer, db.ForeignKey("seminars.id"), nullable=False, index=True)
+    name = db.Column(db.String(200), nullable=False)
+    branch_name = db.Column(db.String(200))
+    email = db.Column(db.String(255))
+    name_norm = db.Column(db.String(200), index=True)
+    branch_norm = db.Column(db.String(200))
+    email_norm = db.Column(db.String(255), index=True)
+    class_value = db.Column(db.String(255))
+    imported_at = db.Column(db.DateTime, default=datetime.utcnow)
+    consumed_at = db.Column(db.DateTime, nullable=True)
+
+    __table_args__ = (
+        db.UniqueConstraint("seminar_id", "email_norm", "name_norm",
+                            name="uq_pending_seminar_identity"),
+    )
