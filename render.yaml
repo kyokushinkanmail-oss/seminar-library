@@ -12,7 +12,7 @@ services:
       - key: BASE_URL
         value: https://kyokushin-seminar.onrender.com
       - key: ADMIN_KEY
-        value: kyokushin-admin-2026
+        sync: false
       - key: FLASK_DEBUG
         value: "0"
       - key: STRIPE_SECRET_KEY
