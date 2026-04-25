@@ -33,6 +33,8 @@
                class="btn btn-outline btn-sm">セミナー登録QR</a>
             <a href="{{ url_for('admin_attendees', seminar_id=seminar.id, key=request.args.get('key','')) }}"
                class="btn btn-outline btn-sm">登録者一覧（{{ seminar.attendances | length }}）</a>
+            <a href="{{ url_for('admin_sheet_config', seminar_id=seminar.id, key=request.args.get('key','')) }}"
+               class="btn btn-outline btn-sm">シート同期</a>
         </div>
 
         {% if seminar.materials %}

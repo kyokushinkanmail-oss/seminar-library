@@ -16,8 +16,12 @@ from flask import (
 )
 
 from database import db, init_db
-from models import User, Seminar, Attendance, Purchase, Material, Video
+from models import (
+    User, Seminar, Attendance, Purchase, Material, Video,
+    SheetSource, SheetClassMaterialMap, MaterialGrant, SheetPendingEntry,
+)
 from translations import t as _t, TRANSLATIONS
+from lib import sheet_sync
 
 # ============================================
 # アプリ初期化
@@ -346,6 +350,106 @@ def _ensure_3bu_material():
 
 with app.app_context():
     _ensure_3bu_material()
+
+
+def _ensure_april19_sheet_config():
+    """4/19 組手セミナー（一部=ポジショニング / 二部=肘膝 / 三部=オンライン質問会 / 四部=組手会）の
+    SheetSource と Class→Material マッピングを冪等に投入する。
+
+    シートの「参加講座」実値（2026/04 時点）:
+      - ⑤一日通し参加                                    → 全部のセミナー全Material
+      - ①【ポジショニング】... ②『膝・肘編』...          → 一部+二部のMaterial
+      - ②『膝・肘編』...                                  → 二部のMaterial
+      - ③『オンライン質問会』...                          → 三部のMaterial
+      - ④『組手会』...                                    → 四部（Material無しなのでマップ不要）
+    """
+    try:
+        csv_url = os.environ.get(
+            "APRIL19_SHEET_CSV_URL",
+            "https://docs.google.com/spreadsheets/d/1Vzp7RU1gqMnxhhLbg69jS-EhjO1Fez3uFRgip0BR-Us/export?format=csv",
+        )
+
+        positioning_mat = Material.query.filter(Material.title.like("%ポジショニング%")).first()
+        kinni_mat = Material.query.filter(
+            (Material.title.like("%肘%膝%")) | (Material.file_path == "materials/kinni.pdf")
+        ).first()
+        # 三部: 「オンライン組手研究会」まとめMaterial（_ensure_3bu_material が作成）
+        seminar3 = Seminar.query.filter_by(slug="2026-04-19-kumite-3").first()
+        bu3_mat = (
+            Material.query.filter_by(seminar_id=seminar3.id).first() if seminar3 else None
+        )
+        if not positioning_mat:
+            return  # 4/19 セミナー未seedなら何もしない
+
+        # シートの実値（コピペ精度が重要）
+        FULL_DAY = "⑤一日通し参加"
+        POS_AND_KINNI = (
+            "①【ポジショニング】4月19日（日）10：00〜12：00, "
+            "②『膝・肘編』4月19日（日）13：00〜15：00"
+        )
+        KINNI_ONLY = "②『膝・肘編』4月19日（日）13：00〜15：00"
+        BU3_ONLY = "③『オンライン質問会』4月19日（日）16：00〜18：00"
+
+        bucket = []
+        # 一部（ポジショニング）
+        bucket.append((
+            positioning_mat.seminar_id,
+            [
+                (FULL_DAY, None),                       # 全Material(=出席扱い)
+                (POS_AND_KINNI, positioning_mat.id),    # 一部の資料のみ
+            ],
+        ))
+        # 二部（肘・膝）
+        if kinni_mat and kinni_mat.seminar_id != positioning_mat.seminar_id:
+            bucket.append((
+                kinni_mat.seminar_id,
+                [
+                    (FULL_DAY, None),
+                    (POS_AND_KINNI, kinni_mat.id),
+                    (KINNI_ONLY, kinni_mat.id),
+                ],
+            ))
+        # 三部（オンライン質問会）
+        if bu3_mat:
+            bucket.append((
+                bu3_mat.seminar_id,
+                [
+                    (FULL_DAY, None),
+                    (BU3_ONLY, bu3_mat.id),
+                ],
+            ))
+
+        for seminar_id, mappings in bucket:
+            src = SheetSource.query.filter_by(seminar_id=seminar_id).first()
+            if not src:
+                db.session.add(SheetSource(seminar_id=seminar_id, csv_url=csv_url))
+            elif not src.csv_url:
+                src.csv_url = csv_url
+            for class_value, material_id in mappings:
+                exists = SheetClassMaterialMap.query.filter_by(
+                    seminar_id=seminar_id,
+                    class_value=class_value,
+                    material_id=material_id,
+                ).first()
+                if exists:
+                    continue
+                db.session.add(SheetClassMaterialMap(
+                    seminar_id=seminar_id,
+                    class_value=class_value,
+                    material_id=material_id,
+                ))
+        db.session.commit()
+        print(f"[ensure_april19_sheet_config] sheet config seeded ({len(bucket)} seminars)")
+    except Exception as e:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        print(f"[ensure_april19_sheet_config] skipped: {e}")
+
+
+with app.app_context():
+    _ensure_april19_sheet_config()
 
 
 def _ensure_material_price_2000():
@@ -810,6 +914,7 @@ def register():
         branch_name = request.form.get("branch_name", "").strip()
         name = request.form.get("name", "").strip()
         phone = request.form.get("phone", "").strip()
+        email = request.form.get("email", "").strip() or None
         if not name or not phone or not branch_name:
             flash("支部名・お名前・電話番号をすべて入力してください", "error")
             return render_template("register.html", is_new=True)
@@ -825,6 +930,7 @@ def register():
             branch_name=branch_name,
             phone_hash=phone_hash,
             phone_last4=phone.replace("-", "")[-4:],
+            email=email,
             created_at=datetime.utcnow()
         )
         db.session.add(user)
@@ -946,6 +1052,11 @@ def _process_pending_seminar(user):
             )
             db.session.add(att)
             db.session.commit()
+    # シート未マッチ Pending を本ユーザー宛てに消化
+    try:
+        sheet_sync.consume_pending_for_user(user)
+    except Exception as e:
+        print(f"[consume_pending_for_user] skipped: {e}")
 
 
 # ============================================
@@ -959,10 +1070,20 @@ def library():
     attendances = Attendance.query.filter_by(user_id=user.id)\
         .order_by(Attendance.attended_at.desc()).all()
     seminar_ids = [a.seminar_id for a in attendances]
-    seminars = Seminar.query.filter(Seminar.id.in_(seminar_ids)).all() if seminar_ids else []
-    # 出席順に並べる
+    seminar_id_set = set(seminar_ids)
+
+    # シート同期で Material 単位で付与されているセミナーも一覧に含める
+    grants = MaterialGrant.query.filter_by(user_id=user.id).all()
+    grant_seminar_ids = {g.seminar_id for g in grants}
+    extra_ids = [sid for sid in grant_seminar_ids if sid not in seminar_id_set]
+    all_ids = list(seminar_ids) + extra_ids
+    seminars = Seminar.query.filter(Seminar.id.in_(all_ids)).all() if all_ids else []
     seminar_map = {s.id: s for s in seminars}
+    # 出席順 → 後ろに grant のみのセミナー（日付降順）
     ordered = [seminar_map[sid] for sid in seminar_ids if sid in seminar_map]
+    extras = [seminar_map[sid] for sid in extra_ids if sid in seminar_map]
+    extras.sort(key=lambda s: s.date or datetime.min, reverse=True)
+    ordered.extend(extras)
 
     # 購入済みの動画・資料
     purchases = Purchase.query.filter_by(
@@ -977,6 +1098,8 @@ def library():
         Seminar.is_published == True
     ).order_by(Seminar.date.asc()).first()
 
+    granted_material_ids = {g.material_id for g in grants}
+
     return render_template(
         "library.html",
         user=user,
@@ -985,6 +1108,7 @@ def library():
         upcoming=upcoming,
         purchased_video_ids=purchased_video_ids,
         purchased_material_ids=purchased_material_ids,
+        granted_material_ids=granted_material_ids,
     )
 
 
@@ -1000,8 +1124,17 @@ def seminar_detail(seminar_id):
         user_id=user.id, seminar_id=seminar_id
     ).first()
 
-    # 資料一覧
-    materials = Material.query.filter_by(seminar_id=seminar_id).all()
+    # 資料一覧（出席があれば全資料、なければシート grant のあるものだけ表示）
+    granted_material_ids = {
+        g.material_id for g in MaterialGrant.query.filter_by(
+            user_id=user.id, seminar_id=seminar_id
+        ).all()
+    }
+    materials_q = Material.query.filter_by(seminar_id=seminar_id).all()
+    if attendance:
+        materials = materials_q
+    else:
+        materials = [m for m in materials_q if m.id in granted_material_ids]
 
     # 動画一覧
     videos = Video.query.filter_by(seminar_id=seminar_id).all()
@@ -1026,6 +1159,7 @@ def seminar_detail(seminar_id):
         zoom_attended=zoom_attended,
         purchased_video_ids=purchased_video_ids,
         purchased_material_ids=purchased_material_ids,
+        granted_material_ids=granted_material_ids,
     )
 
 
@@ -1037,15 +1171,18 @@ def view_material(material_id):
     material = Material.query.get_or_404(material_id)
     seminar = Seminar.query.get(material.seminar_id)
 
-    # アクセス権チェック：出席者 or 購入者
+    # アクセス権チェック：出席者 or 購入者 or シート同期で付与済み
     attendance = Attendance.query.filter_by(
         user_id=user.id, seminar_id=material.seminar_id
     ).first()
     purchased = Purchase.query.filter_by(
         user_id=user.id, material_id=material_id, status="completed"
     ).first()
+    granted = MaterialGrant.query.filter_by(
+        user_id=user.id, material_id=material_id
+    ).first()
 
-    if not attendance and not purchased and not material.is_free:
+    if not attendance and not purchased and not material.is_free and not granted:
         flash("この資料にアクセスするには、セミナーへの参加または購入が必要です。", "error")
         return redirect(url_for("library"))
 
@@ -1074,15 +1211,18 @@ def download_material(material_id):
     user = get_current_user()
     material = Material.query.get_or_404(material_id)
 
-    # アクセス権チェック：出席者 or 購入者 or 無料
+    # アクセス権チェック：出席者 or 購入者 or 無料 or シート同期で付与済み
     attendance = Attendance.query.filter_by(
         user_id=user.id, seminar_id=material.seminar_id
     ).first()
     purchased = Purchase.query.filter_by(
         user_id=user.id, material_id=material_id, status="completed"
     ).first()
+    granted = MaterialGrant.query.filter_by(
+        user_id=user.id, material_id=material_id
+    ).first()
 
-    if not attendance and not purchased and not material.is_free:
+    if not attendance and not purchased and not material.is_free and not granted:
         flash("この資料にアクセスするには、セミナーへの参加または購入が必要です。", "error")
         return redirect(url_for("library"))
 
@@ -1592,6 +1732,137 @@ def admin_users():
     return render_template("admin/users.html", users=users, key=admin_key)
 
 
+# ============================================
+# Admin: シート同期（参加者リスト → MaterialGrant）
+# ============================================
+def _parse_class_map_text(text, materials_by_id):
+    """textarea 入力をパース: 1 行 = `class_value | material_id-or-ALL`。
+    返り値: [(class_value, material_id_or_None, error_or_empty), ...]"""
+    out = []
+    for line in (text or "").splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        parts = [p.strip() for p in s.split("|", 1)]
+        if len(parts) != 2:
+            out.append((s, None, "format_invalid"))
+            continue
+        class_value, target = parts
+        if not class_value:
+            continue
+        if target.upper() == "ALL":
+            out.append((class_value, None, ""))
+        else:
+            try:
+                mid = int(target)
+                if mid in materials_by_id:
+                    out.append((class_value, mid, ""))
+                else:
+                    out.append((class_value, None, f"unknown_material_id:{mid}"))
+            except ValueError:
+                out.append((class_value, None, f"not_a_number:{target}"))
+    return out
+
+
+@app.route("/admin/seminar/<int:seminar_id>/sheet", methods=["GET", "POST"])
+def admin_sheet_config(seminar_id):
+    """セミナー単位のシート設定 + 同期画面"""
+    admin_key = request.values.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    seminar = Seminar.query.get_or_404(seminar_id)
+    materials = Material.query.filter_by(seminar_id=seminar_id).order_by(Material.sort_order).all()
+    materials_by_id = {m.id: m for m in materials}
+
+    if request.method == "POST":
+        csv_url = request.form.get("csv_url", "").strip()
+        map_text = request.form.get("class_map", "")
+        if not csv_url:
+            flash("CSV URL を入力してください", "error")
+            return redirect(url_for("admin_sheet_config", seminar_id=seminar_id, key=admin_key))
+
+        src = SheetSource.query.filter_by(seminar_id=seminar_id).first()
+        if not src:
+            src = SheetSource(seminar_id=seminar_id, csv_url=csv_url)
+            db.session.add(src)
+        else:
+            src.csv_url = csv_url
+
+        # 既存マッピング全削除 → textarea 内容で再構築
+        SheetClassMaterialMap.query.filter_by(seminar_id=seminar_id).delete()
+        parsed = _parse_class_map_text(map_text, materials_by_id)
+        ok = 0
+        errs = []
+        for class_value, mid, err in parsed:
+            if err:
+                errs.append(f"{class_value}: {err}")
+                continue
+            db.session.add(SheetClassMaterialMap(
+                seminar_id=seminar_id, class_value=class_value, material_id=mid
+            ))
+            ok += 1
+        db.session.commit()
+        flash(f"設定を保存しました（マッピング {ok} 件登録）", "success")
+        if errs:
+            flash("無効な行: " + " / ".join(errs), "error")
+        return redirect(url_for("admin_sheet_config", seminar_id=seminar_id, key=admin_key))
+
+    src = SheetSource.query.filter_by(seminar_id=seminar_id).first()
+    maps = SheetClassMaterialMap.query.filter_by(seminar_id=seminar_id).all()
+    pending = SheetPendingEntry.query.filter_by(
+        seminar_id=seminar_id, consumed_at=None
+    ).order_by(SheetPendingEntry.imported_at.desc()).all()
+
+    map_text_default = "\n".join(
+        f"{m.class_value} | {'ALL' if m.material_id is None else m.material_id}"
+        for m in maps
+    )
+
+    last_result = None
+    if src and src.last_result_json:
+        try:
+            import json as _json
+            last_result = _json.loads(src.last_result_json)
+        except Exception:
+            last_result = None
+
+    return render_template(
+        "admin/sheet.html",
+        seminar=seminar,
+        materials=materials,
+        src=src,
+        maps=maps,
+        pending=pending,
+        map_text_default=map_text_default,
+        last_result=last_result,
+        key=admin_key,
+    )
+
+
+@app.route("/admin/seminar/<int:seminar_id>/sheet/sync", methods=["POST"])
+def admin_sheet_sync(seminar_id):
+    admin_key = request.values.get("key", "")
+    if admin_key != os.environ.get("ADMIN_KEY", "admin"):
+        abort(403)
+    Seminar.query.get_or_404(seminar_id)
+    result = sheet_sync.sync_seminar(seminar_id)
+    if "error" in result:
+        flash(f"同期失敗: {result['error']}", "error")
+    else:
+        msg = (
+            f"同期完了: 取得 {result.get('fetched', 0)} 行 / "
+            f"マッチ {result.get('matched', 0)} / "
+            f"資料付与 {result.get('granted', 0)} / "
+            f"出席追加 {result.get('attended_added', 0)} / "
+            f"未マッチ {result.get('pending', 0)} / "
+            f"未定義講座 {result.get('unknown_class', 0)}"
+        )
+        flash(msg, "success")
+        if result.get("errors"):
+            flash("エラー: " + " / ".join(result["errors"][:3]), "error")
+    return redirect(url_for("admin_sheet_config", seminar_id=seminar_id, key=admin_key))
+
+
 @app.route("/admin/seminar/<int:seminar_id>/zoom", methods=["POST"])
 def admin_mark_zoom(seminar_id):
     """Zoom参加者を一括登録"""
@@ -1730,13 +2001,19 @@ def my_materials():
         if pp.material_id:
             purchase_by_material[pp.material_id] = pp
 
-    # 資料取得（出席 OR 購入 OR 無料公開）
+    # シート同期で付与された Material IDs
+    grants = MaterialGrant.query.filter_by(user_id=user.id).all()
+    granted_material_ids = [g.material_id for g in grants]
+
+    # 資料取得（出席 OR 購入 OR シート付与 OR 無料公開）
     from sqlalchemy import or_
     conds = []
     if attended_seminar_ids:
         conds.append(Material.seminar_id.in_(attended_seminar_ids))
     if purchased_material_ids:
         conds.append(Material.id.in_(purchased_material_ids))
+    if granted_material_ids:
+        conds.append(Material.id.in_(granted_material_ids))
     conds.append(Material.is_free == True)  # noqa: E712
 
     query = Material.query.filter(or_(*conds))
@@ -1760,6 +2037,7 @@ def my_materials():
             "seminar": s,
             "via_attendance": s.id in attended_seminar_ids,
             "via_purchase": m.id in purchased_material_ids,
+            "via_grant": m.id in granted_material_ids,
             "has_pdf": bool(m.file_path),
             "purchase": purchase_by_material.get(m.id),
         })
