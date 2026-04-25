@@ -34,8 +34,6 @@ if _database_url.startswith("postgres://"):
     _database_url = _database_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["STRIPE_SECRET_KEY"] = os.environ.get("STRIPE_SECRET_KEY", "")
-app.config["STRIPE_PUBLISHABLE_KEY"] = os.environ.get("STRIPE_PUBLISHABLE_KEY", "")
 app.config["BASE_URL"] = os.environ.get("BASE_URL", "http://localhost:5000")
 app.config["GA_MEASUREMENT_ID"] = os.environ.get("GA_MEASUREMENT_ID", "")
 app.config["RECEIPT_ISSUER_NAME"] = os.environ.get("RECEIPT_ISSUER_NAME", "極真館組手セミナー")
@@ -989,7 +987,6 @@ def seminar_detail(seminar_id):
         zoom_attended=zoom_attended,
         purchased_video_ids=purchased_video_ids,
         purchased_material_ids=purchased_material_ids,
-        stripe_key=app.config["STRIPE_PUBLISHABLE_KEY"],
     )
 
 
@@ -1099,12 +1096,12 @@ def view_video(video_id):
 
 
 # ============================================
-# 購入（Stripe Payment Links）
+# 購入
 # ============================================
 @app.route("/purchase/video/<int:video_id>", methods=["POST"])
 @login_required
 def purchase_video(video_id):
-    """動画購入 — Stripe Payment Linkへリダイレクト"""
+    """動画購入 — デモモード（Square個別URLは未対応）"""
     user = get_current_user()
     video = Video.query.get_or_404(video_id)
 
@@ -1115,27 +1112,17 @@ def purchase_video(video_id):
     if existing:
         return redirect(url_for("view_video", video_id=video_id))
 
-    # 購入レコード作成（pending状態）
+    # 購入レコード作成 → デモモードで即完了
     purchase = Purchase(
         user_id=user.id,
         video_id=video_id,
         item_type="video",
         amount=video.price,
-        status="pending",
-        created_at=datetime.utcnow()
+        status="completed",
+        created_at=datetime.utcnow(),
+        completed_at=datetime.utcnow(),
     )
     db.session.add(purchase)
-    db.session.commit()
-
-    # Stripe Payment Linkがある場合はリダイレクト
-    if video.stripe_payment_link:
-        return redirect(
-            f"{video.stripe_payment_link}?client_reference_id=purchase_{purchase.id}"
-        )
-
-    # なければデモモードで即完了
-    purchase.status = "completed"
-    purchase.completed_at = datetime.utcnow()
     db.session.commit()
     flash("購入が完了しました！動画を視聴できます。", "success")
     return redirect(url_for("view_video", video_id=video_id))
@@ -1165,7 +1152,7 @@ def purchase_material(material_id):
     db.session.add(purchase)
     db.session.commit()
 
-    # Square優先 → Stripe → デモ
+    # Square → デモ
     square_url = getattr(material, "square_checkout_url", None)
     if square_url:
         # SquareのCheckout Linkは ?note= か ?checkoutReferenceId= で参照を渡せる。
@@ -1175,65 +1162,12 @@ def purchase_material(material_id):
             f"{square_url}{sep}note=purchase_{purchase.id}&checkoutReferenceId=purchase_{purchase.id}"
         )
 
-    if material.stripe_payment_link:
-        return redirect(
-            f"{material.stripe_payment_link}?client_reference_id=purchase_{purchase.id}"
-        )
-
     # デモモード
     purchase.status = "completed"
     purchase.completed_at = datetime.utcnow()
     db.session.commit()
     flash("購入が完了しました！資料を閲覧できます。", "success")
     return redirect(url_for("view_material", material_id=material_id))
-
-
-@app.route("/subscribe")
-@login_required
-def subscribe():
-    """添削サブスク案内ページ"""
-    user = get_current_user()
-    return render_template("subscribe.html", user=user)
-
-
-# ============================================
-# Stripe Webhook
-# ============================================
-@app.route("/webhook/stripe", methods=["POST"])
-def stripe_webhook():
-    """Stripe決済完了通知を処理"""
-    import stripe
-    stripe.api_key = app.config["STRIPE_SECRET_KEY"]
-    endpoint_secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
-
-    payload = request.get_data()
-    sig_header = request.headers.get("Stripe-Signature", "")
-
-    try:
-        if endpoint_secret:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, endpoint_secret
-            )
-        else:
-            event = stripe.Event.construct_from(
-                request.get_json(), stripe.api_key
-            )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-
-    if event["type"] == "checkout.session.completed":
-        session_data = event["data"]["object"]
-        ref = session_data.get("client_reference_id", "")
-        if ref.startswith("purchase_"):
-            purchase_id = int(ref.replace("purchase_", ""))
-            purchase = Purchase.query.get(purchase_id)
-            if purchase:
-                purchase.status = "completed"
-                purchase.completed_at = datetime.utcnow()
-                purchase.stripe_session_id = session_data.get("id")
-                db.session.commit()
-
-    return jsonify({"status": "ok"}), 200
 
 
 # ============================================
@@ -2066,7 +2000,7 @@ def admin_view_material(material_id):
 
 @app.route("/admin/material/<int:material_id>/edit", methods=["GET", "POST"])
 def admin_edit_material(material_id):
-    """資料の価格・Stripe Payment Link を編集"""
+    """資料の価格・Square Checkout URL を編集"""
     admin_key = request.args.get("key", "") or request.form.get("key", "")
     if admin_key != os.environ.get("ADMIN_KEY", "admin"):
         abort(403)
@@ -2078,7 +2012,6 @@ def admin_edit_material(material_id):
             material.price = int(request.form.get("price", "0") or 0)
         except ValueError:
             material.price = 0
-        material.stripe_payment_link = (request.form.get("stripe_payment_link") or "").strip() or None
         try:
             material.square_checkout_url = (request.form.get("square_checkout_url") or "").strip() or None
         except Exception:
