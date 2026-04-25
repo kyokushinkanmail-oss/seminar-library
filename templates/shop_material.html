@@ -39,7 +39,7 @@
             ¥{{ '{:,}'.format(material.price) }}
             <span style="font-size:0.7rem; color:#737373; font-weight:400;">{% if lang == 'en' %}(tax incl.){% else %}（税込）{% endif %}</span>
         </p>
-        {% if material.stripe_payment_link or material.square_checkout_url %}
+        {% if material.square_checkout_url %}
         <form method="post" action="{{ url_for('purchase_material', material_id=material.id) }}">
             <button type="submit" class="btn btn-red btn-block"
                     {% if not user %}disabled title="{% if lang == 'en' %}Please log in{% else %}ログインしてください{% endif %}"{% endif %}>

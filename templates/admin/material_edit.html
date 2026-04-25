@@ -70,17 +70,6 @@
             決済完了すると Webhook 経由で自動的にログインユーザーが閲覧可能になります。
         </p>
 
-        <label style="display:block; font-size:0.85rem; font-weight:700; color:#404040; margin-bottom:6px;">
-            Stripe Payment Link URL <span style="color:#737373; font-size:0.75rem;">（予備）</span>
-        </label>
-        <input type="url" name="stripe_payment_link"
-               value="{{ material.stripe_payment_link or '' }}"
-               placeholder="https://buy.stripe.com/..."
-               style="width:100%; padding:10px 12px; border:1px solid #d4d4d4; border-radius:10px; font-size:0.92rem; margin-bottom:6px;">
-        <p style="font-size:0.78rem; color:#737373; margin:0 0 14px;">
-            Square が設定されている場合はそちらが優先されます。両方空の場合は「準備中」になります。
-        </p>
-
         <label style="display:flex; align-items:center; gap:8px; margin-bottom:18px; font-size:0.92rem; color:#404040;">
             <input type="checkbox" name="is_free" {% if material.is_free %}checked{% endif %}
                    style="width:18px; height:18px;">
