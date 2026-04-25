@@ -21,7 +21,7 @@ from models import (
     SheetSource, SheetClassMaterialMap, MaterialGrant, SheetPendingEntry,
 )
 from translations import t as _t, TRANSLATIONS
-from lib import sheet_sync
+import sheet_sync
 
 # ============================================
 # アプリ初期化
