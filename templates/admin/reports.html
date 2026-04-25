@@ -137,7 +137,7 @@
                 <p style="font-size:0.7rem; color:#737373; margin:4px 0 0;">
                     {{ p.created_at.strftime('%Y-%m-%d %H:%M') if p.created_at else '' }}
                     {% if p.status == 'completed' %}
-                        · 決済: {% if p.stripe_session_id %}Stripe{% elif p.square_order_id %}Square{% else %}demo{% endif %}
+                        · 決済: {% if p.square_order_id %}Square{% else %}demo{% endif %}
                     {% endif %}
                 </p>
             </div>

@@ -395,8 +395,47 @@ def _ensure_square_columns():
         print(f"[ensure_square_columns] skipped: {e}")
 
 
+def _drop_stripe_columns():
+    """Phase B: Stripe関連カラムを削除（Stripe決済実績ゼロのため安全）
+
+    対象:
+      - users.stripe_customer_id
+      - materials.stripe_payment_link
+      - videos.stripe_payment_link
+      - purchases.stripe_session_id
+    """
+    try:
+        from sqlalchemy import text
+        dialect = db.engine.dialect.name
+        targets = [
+            ("users", "stripe_customer_id"),
+            ("materials", "stripe_payment_link"),
+            ("videos", "stripe_payment_link"),
+            ("purchases", "stripe_session_id"),
+        ]
+        with db.engine.connect() as conn:
+            if dialect == "postgresql":
+                for table, col in targets:
+                    conn.execute(text(
+                        f"ALTER TABLE {table} DROP COLUMN IF EXISTS {col}"
+                    ))
+            else:
+                # SQLite: 存在確認してから DROP（SQLite 3.35+ でDROP COLUMNサポート）
+                def drop_if_exists(table, col):
+                    cols = [r[1] for r in conn.execute(text(f"PRAGMA table_info({table})")).fetchall()]
+                    if col in cols:
+                        conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {col}"))
+                for table, col in targets:
+                    drop_if_exists(table, col)
+            conn.commit()
+        print("[drop_stripe_columns] ok")
+    except Exception as e:
+        print(f"[drop_stripe_columns] skipped: {e}")
+
+
 with app.app_context():
     _ensure_square_columns()
+    _drop_stripe_columns()
 
 
 SQUARE_DEFAULT_CHECKOUT_URL = "https://square.link/u/f8660Y6m"
@@ -1386,7 +1425,7 @@ def admin_reports_csv():
     import csv, io
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["purchase_id", "created_at", "completed_at", "status", "user_name", "branch", "item_type", "material_title", "amount", "stripe_session_id", "square_order_id"])
+    writer.writerow(["purchase_id", "created_at", "completed_at", "status", "user_name", "branch", "item_type", "material_title", "amount", "square_order_id"])
     for p in Purchase.query.order_by(Purchase.created_at.desc()).all():
         user = User.query.get(p.user_id) if p.user_id else None
         mat = Material.query.get(p.material_id) if p.material_id else None
@@ -1400,7 +1439,6 @@ def admin_reports_csv():
             p.item_type,
             mat.title if mat else "",
             p.amount,
-            p.stripe_session_id or "",
             getattr(p, "square_order_id", "") or "",
         ])
     from flask import Response
@@ -1774,9 +1812,7 @@ def receipt_pdf(purchase_id):
     buyer_name = buyer.name if buyer else ""
 
     # 決済方法
-    if p.stripe_session_id:
-        method = "クレジットカード（Stripe）"
-    elif p.square_order_id:
+    if p.square_order_id:
         method = "クレジットカード（Square）"
     else:
         method = "その他"
@@ -1849,9 +1885,7 @@ def receipt_pdf(purchase_id):
     y -= 15 * mm
     c.setFont(font_main, 9)
     c.drawString(margin, y, f"お支払方法: {method}")
-    if p.stripe_session_id:
-        c.drawString(margin, y - 4 * mm, f"取引ID: {p.stripe_session_id[:40]}")
-    elif p.square_order_id:
+    if p.square_order_id:
         c.drawString(margin, y - 4 * mm, f"取引ID: {p.square_order_id[:40]}")
 
     # 発行者
